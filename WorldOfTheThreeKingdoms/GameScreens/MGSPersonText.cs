@@ -266,6 +266,13 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             Session.Current.Scenario.CurrentPlayer = faction;
             //this.Plugins.AirViewPlugin.ReloadTroopView();
             this.gengxinyoucelan();
+
+            if (Session.Current.Scenario.needAutoSave)
+            {
+                this.SaveGameAutoPosition();
+                Session.Current.Scenario.needAutoSave = false;
+            }
+
             if (faction.IsPositionKnown(faction.Leader.Position) || Session.GlobalVariables.SkyEye)
             {
                 this.Plugins.PersonBubblePlugin.AddPerson(faction.Leader, faction.Leader.Position, TextMessageKind.GetTurn, "GetControl");
@@ -460,8 +467,9 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 this.Plugins.tupianwenziPlugin.SetGameObjectBranch(p, p, msgKind, shijian, tupian, shengyin);
                 this.Plugins.tupianwenziPlugin.SetPosition(ShowPosition.Bottom, Session.MainGame.mainGameScreen);
                 this.Plugins.tupianwenziPlugin.IsShowing = true;
-                this.PauseMusic();
-                this.tufashijianzantingyinyue = true;
+                //jokosany取消暂停音乐，下面共计4个
+               // this.PauseMusic();
+               // this.tufashijianzantingyinyue = true;
             }
         }
 
@@ -482,8 +490,8 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 this.Plugins.tupianwenziPlugin.SetGameObjectBranch(p, p, msgKind, shijian, tupian, shengyin);
                 this.Plugins.tupianwenziPlugin.SetPosition(ShowPosition.Bottom, Session.MainGame.mainGameScreen);
                 this.Plugins.tupianwenziPlugin.IsShowing = true;
-                this.PauseMusic();
-                this.tufashijianzantingyinyue = true;
+               // this.PauseMusic();
+               // this.tufashijianzantingyinyue = true;
             }
         }
 
@@ -507,8 +515,8 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 this.Plugins.tupianwenziPlugin.SetGameObjectBranch(p, p, shijian, tupian, shengyin);
                 this.Plugins.tupianwenziPlugin.SetPosition(ShowPosition.Bottom, Session.MainGame.mainGameScreen);
                 this.Plugins.tupianwenziPlugin.IsShowing = true;
-                this.PauseMusic();
-                this.tufashijianzantingyinyue = true;
+               // this.PauseMusic();
+              //  this.tufashijianzantingyinyue = true;
             }
         }
 
@@ -524,16 +532,13 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
             if ((zongshixianshi) || p.BelongedFaction == Session.Current.Scenario.CurrentPlayer)
             {
-
-
-
                 p.TextResultString = TextResultString;
                 p.TextDestinationString = TextDestinationString;
                 this.Plugins.tupianwenziPlugin.SetGameObjectBranch(p, p, shijian, tupian, shengyin);
                 this.Plugins.tupianwenziPlugin.SetPosition(ShowPosition.Bottom, Session.MainGame.mainGameScreen);
                 this.Plugins.tupianwenziPlugin.IsShowing = true;
-                this.PauseMusic();
-                this.tufashijianzantingyinyue = true;
+              //  this.PauseMusic();
+               // this.tufashijianzantingyinyue = true;
 
             }
         }

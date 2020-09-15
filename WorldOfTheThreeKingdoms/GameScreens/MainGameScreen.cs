@@ -33,8 +33,8 @@ namespace WorldOfTheThreeKingdoms.GameScreens
         private Keys currentKey;
         private bool drawingSelector;
         private bool tufashijianzantingyinyue=false ;
-        private DateTime shangciCundangShijian;
-        private TimeSpan cundangShijianJiange;
+        private int shangciCundangShijian;
+        private int cundangShijianJiange;
         public bool EnableLaterMouseLeftDownEvent;
         public bool EnableLaterMouseLeftUpEvent;
         public bool EnableLaterMouseMoveEvent;
@@ -77,6 +77,10 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
         private bool mapEdited = false;
 
+        public CloudLayer cloudLayer = new CloudLayer();
+
+        public DantiaoLayer dantiaoLayer = null;
+
         public MainGameScreen()
             : base()
         {
@@ -104,12 +108,12 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.EnableLaterMouseScrollEvent = true;
             this.frameRate = 0;
             this.frameCounter = 0;
-            this.cundangShijianJiange = TimeSpan.Zero;
-            this.shangciCundangShijian = DateTime.Now;
+            this.cundangShijianJiange = 0;
+            this.shangciCundangShijian = 0;
             this.UpdateCount = 0;
 
             this.screenManager = new ScreenManager();
-
+            
             //Session.Current.Scenario = new GameScenario(this);
             //this.LoadCommonData();
 
@@ -263,12 +267,19 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.mainMapLayer.Draw(base.viewportSize);
             this.architectureLayer.Draw(base.viewportSize, gameTime);
             this.routewayLayer.Draw(base.viewportSize);
+
+            this.cloudLayer.Draw();
+
+            if (this.dantiaoLayer != null)
+            {
+                this.dantiaoLayer.Draw();
+            }
+
             this.tileAnimationLayer.Draw(base.viewportSize);
             
             this.troopLayer.Draw(base.viewportSize, gameTime);
-            
-            this.mapVeilLayer.Draw(base.viewportSize);
 
+            this.mapVeilLayer.Draw(base.viewportSize);
 
             switch (base.UndoneWorks.Peek().Kind)
             {
@@ -662,7 +673,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     if (this.CurrentArchitecture != null)
                     {
                         this.selectingLayer.AreaFrameKind = SelectingUndoneWorkKind.AssassinatePosition;
-                        this.selectingLayer.Area = this.CurrentArchitecture.GetAssassinateArchitectureArea();
+                        this.selectingLayer.Area = this.CurrentArchitecture.GetAssassinateArchitectureArea((this.CurrentPersons[0] as Person).BelongedFaction);
                         this.selectingLayer.ShowComment = true;
                         this.selectingLayer.SingleWay = true;
                         this.selectingLayer.FromArea = this.CurrentArchitecture.ArchitectureArea;
@@ -887,7 +898,14 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 case SelectingUndoneWorkKind.ArchitectureAvailableContactArea:
                     if (!this.selectingLayer.Canceled)
                     {
-                        this.screenManager.SetCreatingTroopPosition(this.selectingLayer.SelectedPoint);
+                        if(this.CurrentMilitaries.Count==1 && this.CurrentMilitary!=null )
+                        {
+                            this.screenManager.SetCreatingTroopPosition(this.selectingLayer.SelectedPoint);
+                        }
+                        else if (this.CurrentMilitaries.Count > 1)
+                        {
+                            this.screenManager.SetTroopsPosition(this.selectingLayer.SelectedPoint);
+                        }
                     }
                     return;
 
@@ -918,7 +936,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                             {
                                 person.OutsideDestination = new Point?(this.selectingLayer.SelectedPoint);
                             }
-                            this.ShowTabListInFrame(UndoneWorkKind.Frame, FrameKind.Person, FrameFunction.GetAssassinatePersonTarget, false, true, true, false, architectureByPosition.GetAssassinatePersonTarget(), null, "暗杀", "Personal");
+                            this.ShowTabListInFrame(UndoneWorkKind.Frame, FrameKind.Person, FrameFunction.GetAssassinatePersonTarget, false, true, true, false, architectureByPosition.GetAssassinatePersonTarget((this.CurrentPersons[0] as Person).BelongedFaction), null, "暗杀", "Personal");
                         }
                     }
                     return;
@@ -1050,10 +1068,9 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     targetArchitecture = Session.Current.Scenario.GetArchitectureByPosition(this.selectingLayer.SelectedPoint);
                     this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
                     this.CurrentTroop.TargetTroop = null;
-                    this.CurrentTroop.TargetArchitecture  = null;
-                    this.CurrentTroop.Operated = true;
-                    this.CurrentTroop.mingling = "移动";
-
+                    this.CurrentTroop.WillTroop = null;
+                    this.CurrentTroop.TargetArchitecture = null;
+                    this.CurrentTroop.WillArchitecture = null;
 
                     if (targetArchitecture != null)
                     {
@@ -1062,10 +1079,16 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                         if (this.CurrentTroop.BelongedFaction.IsFriendly(targetArchitecture.BelongedFaction))
                         {
                             this.CurrentTroop.BelongedLegion.Kind = LegionKind.Defensive;
-                            break;
                         }
-                        this.CurrentTroop.BelongedLegion.Kind = LegionKind.Offensive;
+                        else
+                        {
+                            this.CurrentTroop.BelongedLegion.Kind = LegionKind.Offensive;
+                        }
                     }
+
+                    this.CurrentTroop.SelectedMove = true;
+                    this.CurrentTroop.mingling = "Move";
+
                     break;
 
                 case SelectingUndoneWorkKind.Trooprucheng :   //入城
@@ -1087,15 +1110,18 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     
                     this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
                     this.CurrentTroop.TargetTroop = null;
+                    this.CurrentTroop.WillTroop = null;
                     this.CurrentTroop.TargetArchitecture = null;
-                    this.CurrentTroop.mingling = "入城";
-                    this.CurrentTroop.minglingweizhi = this.selectingLayer.SelectedPoint;
-                    this.CurrentTroop.Operated = true;
+                    this.CurrentTroop.WillArchitecture = null;
+                    this.CurrentTroop.mingling = "Enter";
                     if (targetArchitecture != null)
                     {
                         this.CurrentTroop.TargetArchitecture = targetArchitecture;
 
                     }
+
+                    this.CurrentTroop.SelectedMove = true;
+
                     break;
 
 
@@ -1106,40 +1132,59 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                         Troop targetTroop = Session.Current.Scenario.GetTroopByPosition(this.selectingLayer.SelectedPoint);
                         foreach (Troop troop in this.SelectorTroops)
                         {
-                            troop.Operated = true;
-                            if (targetArchitecture != null)
+                            if (!troop.SelectedMove && !troop.SelectedAttack)
                             {
-                                if (targetTroop != null && troop.Army.Kind.AirOffence)
+                                if (targetArchitecture != null)
+                                {
+                                    if (targetTroop != null && troop.Army.Kind.AirOffence)
+                                    {
+                                        troop.TargetTroop = targetTroop;
+                                    }
+                                    else
+                                    {
+                                        troop.TargetArchitecture = targetArchitecture;
+                                    }
+                                    troop.WillArchitecture = targetArchitecture;
+                                    troop.BelongedLegion.WillArchitecture = targetArchitecture;
+                                    if (targetArchitecture.BelongedFaction == troop.BelongedFaction)
+                                    {
+                                        troop.TargetTroop = null;
+                                        troop.WillTroop = null;
+                                        troop.mingling = "Enter";
+                                    }
+                                    else
+                                    {
+                                        troop.mingling = "Attack";
+                                    }
+
+                                    troop.SelectedAttack = true;
+                                   
+                                }
+                                else if (targetTroop != null)
                                 {
                                     troop.TargetTroop = targetTroop;
+                                    troop.WillTroop = targetTroop;
+
+                                    troop.SelectedAttack = true;
+                                    troop.mingling = "Attack";
                                 }
                                 else
                                 {
-                                    troop.TargetArchitecture = targetArchitecture;
+                                    troop.mingling = "Move";
                                 }
-                                troop.WillArchitecture = targetArchitecture;
-                                troop.BelongedLegion.WillArchitecture = targetArchitecture;
-                                if (targetArchitecture.BelongedFaction == troop.BelongedFaction)
+                                troop.RealDestination = this.selectingLayer.SelectedPoint;
+                                if (!((targetArchitecture == null) || troop.BelongedFaction.IsFriendly(targetArchitecture.BelongedFaction)))
                                 {
-                                    troop.mingling = "入城";
-                                    troop.minglingweizhi = this.selectingLayer.SelectedPoint;
-                                    troop.TargetTroop = null;
+                                    troop.BelongedLegion.Kind = LegionKind.Offensive;
                                 }
+                                else
+                                {
+                                    troop.BelongedLegion.Kind = LegionKind.Defensive;
+                                }
+                                this.Plugins.PersonBubblePlugin.AddPerson(troop.Leader, troop.Position, TextMessageKind.TroopMoveTo, "Destination");
+
+                                troop.SelectedMove = true;
                             }
-                            else if (targetTroop != null)
-                            {
-                                troop.TargetTroop = targetTroop;
-                            }
-                            troop.RealDestination = this.selectingLayer.SelectedPoint;
-                            if (!((targetArchitecture == null) || troop.BelongedFaction.IsFriendly(targetArchitecture.BelongedFaction)))
-                            {
-                                troop.BelongedLegion.Kind = LegionKind.Offensive;
-                            }
-                            else
-                            {
-                                troop.BelongedLegion.Kind = LegionKind.Defensive;
-                            }
-                            this.Plugins.PersonBubblePlugin.AddPerson(troop.Leader, troop.Position, TextMessageKind.TroopMoveTo, "Destination");
                         }
                     }
                     this.SelectorTroops.Clear();
@@ -1149,14 +1194,12 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     {
                         if (this.selectingLayer.Canceled)
                         {
-                            /*this.CurrentTroop.AttackTargetKind = TroopAttackTargetKind.遇敌;
+                            this.CurrentTroop.AttackTargetKind = TroopAttackTargetKind.遇敌;
                             if (this.CurrentTroop.CurrentStratagem != null)
                             {
                                 this.CurrentTroop.CastTargetKind = TroopCastTargetKind.可能;
                             }
-                            */
-                            this.CurrentTroop.CurrentCombatMethod = null;
-                            this.CurrentTroop.CurrentStratagem = null;
+                            
                             if (this.CurrentTroop.Status == TroopStatus.埋伏)
                             {
                                 this.CurrentTroop.EndAmbush();
@@ -1164,35 +1207,66 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                             return;
                         }
                         //////////////////////////////////////////////////////////////////////////////
-                        /*
+                        
                         Troop troopByPositionNoCheck = Session.Current.Scenario.GetTroopByPositionNoCheck(this.selectingLayer.SelectedPoint);
                         if ((troopByPositionNoCheck == null) || !this.CurrentTroop.BelongedFaction.IsPositionKnown(this.selectingLayer.SelectedPoint))
                         {
                             this.CurrentTroop.TargetTroop = null;
+                            if (!this.CurrentTroop.SelectedMove)
+                            {
+                                this.CurrentTroop.WillTroop = null;
+                                this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
+                            }
                         }
                         else
                         {
                             this.CurrentTroop.TargetTroop = troopByPositionNoCheck;
-                            //this.CurrentTroop.WillTroop = troopByPositionNoCheck;
-                            this.CurrentTroop.TargetArchitecture = null;
-                            //this.CurrentTroop.WillArchitecture = null;
+                            //this.CurrentTroop.TargetArchitecture = null;
+                            if (!this.CurrentTroop.SelectedMove)
+                            {
+                                this.CurrentTroop.WillTroop = troopByPositionNoCheck;
+                                this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
+                                //this.CurrentTroop.WillArchitecture = null;
+                            }
                         }
                         Architecture architectureByPositionNoCheck = Session.Current.Scenario.GetArchitectureByPositionNoCheck(this.selectingLayer.SelectedPoint);
-                        if (architectureByPositionNoCheck != null && architectureByPositionNoCheck.Endurance >0)
+                        if (architectureByPositionNoCheck != null)
                         {
                             this.CurrentTroop.TargetArchitecture = architectureByPositionNoCheck;
-                            //this.CurrentTroop.WillArchitecture  = architectureByPositionNoCheck;
-                            this.CurrentTroop.TargetTroop = null;
-                            //this.CurrentTroop.WillTroop = null;
-                            this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
-
+                            //this.CurrentTroop.TargetTroop = null;
+                            if (!this.CurrentTroop.SelectedMove)
+                            {
+                                this.CurrentTroop.WillArchitecture = architectureByPositionNoCheck;
+                                //this.CurrentTroop.WillTroop = null;
+                                if (!this.CurrentTroop.CanAttack(architectureByPositionNoCheck))
+                                {
+                                    this.CurrentTroop.RealDestination = this.selectingLayer.SelectedPoint;
+                                }
+                                else
+                                {
+                                    this.CurrentTroop.RealDestination = this.CurrentTroop.Position;
+                                }
+                            }
+                            
                         }
                         else
                         {
                             this.CurrentTroop.TargetArchitecture = null;
+                            if (!this.CurrentTroop.SelectedMove)
+                            {
+                                this.CurrentTroop.WillArchitecture = null;
+                            }
                         }
-                        */
+
+                        this.CurrentTroop.SelectedMove = true;
+                        this.CurrentTroop.SelectedAttack = true;
+                        if (this.CurrentTroop.mingling != "Move" && this.CurrentTroop.mingling != "Stratagem" && this.CurrentTroop.mingling != "Enter")
+                        {
+                            this.CurrentTroop.mingling = "Attack";
+                        }
+
                         ///////////////////////////////////////////////////////////////////////////////////
+                        /*
                         Troop troopByPositionNoCheck = Session.Current.Scenario.GetTroopByPositionNoCheck(this.selectingLayer.SelectedPoint);
                         Architecture architectureByPositionNoCheck = Session.Current.Scenario.GetArchitectureByPositionNoCheck(this.selectingLayer.SelectedPoint);
                         bool youjianzhu=false ;
@@ -1242,8 +1316,8 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
                             }
                         }
+                        */
                         /////////////////////////////////////////////////////////////////////////////////////
-                        this.CurrentTroop.Operated = true;
 
                         //this.Plugins.PersonBubblePlugin.AddPerson(this.CurrentTroop.Leader, this.CurrentTroop.Position, "Target");
                         return;
@@ -1256,8 +1330,9 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                         return;
                     }
                     this.CurrentTroop.SelfCastPosition = this.selectingLayer.SelectedPoint;
-                    this.CurrentTroop.Operated = true;
-                    this.CurrentTroop.mingling = "侦查";
+
+                    this.CurrentTroop.SelectedAttack = true;
+                    this.CurrentTroop.mingling = "Stratagem";
 
                     return;
 
@@ -1268,8 +1343,10 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                         return;
                     }
                     this.CurrentTroop.SelfCastPosition = this.selectingLayer.SelectedPoint;
-                    this.CurrentTroop.Operated = true;
-                    this.CurrentTroop.mingling = "——";
+
+                    this.CurrentTroop.SelectedAttack = true;
+                    this.CurrentTroop.mingling = "Stratagem";
+
                     return;
 
                 case SelectingUndoneWorkKind.ArchitectureRoutewayStartPoint:
@@ -1341,6 +1418,15 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.ResetScreenEdge();
             this.mainMapLayer.ReCalculateTileDestination(this);
             this.Plugins.AirViewPlugin.ResetFramePosition(base.viewportSize, this.mainMapLayer.LeftEdge, this.mainMapLayer.TopEdge, this.mainMapLayer.TotalMapSize);
+
+            if (Session.MainGame.mainGameScreen == null)
+            {
+
+            }
+            else
+            {
+                Session.MainGame.mainGameScreen.cloudLayer.Start();
+            }
         }
 
 
@@ -1445,11 +1531,13 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     break;
 
             }
+
             if (this.tufashijianzantingyinyue && this.Plugins.tupianwenziPlugin.IsShowing == false)
             {
                 this.ResumeMusic();
                 this.tufashijianzantingyinyue = false;
             }
+
             return item;
         }
 
@@ -1573,18 +1661,17 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             //throw new Exception("SaveGame");
 
             var saves = GameScenario.LoadScenarioSaves();
-
-            this.Plugins.OptionDialogPlugin.AddOption(saves[1].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition01));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[2].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition02));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[3].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition03));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[4].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition04));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[5].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition05));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[6].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition06));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[7].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition07));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[8].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition08));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[9].Summary,  null, new GameDelegates.VoidFunction(this.SaveGameToPosition09));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[10].Summary, null, new GameDelegates.VoidFunction(this.SaveGameToPosition10));
-
+            for (int i = 1; i <= GameScenario.savemaxcounts; i++)
+            {
+                string ss = i < 10 ? "0" + i.ToString() : i.ToString();
+                GameDelegates.VoidFunction voidFunction = delegate
+                {
+                    this.SaveFileName = "Save" + ss + this.SaveFileExtension;
+                    this.SaveGameToDisk(this.SaveFileName);
+                };
+                saves[i].ID = ss;
+                this.Plugins.OptionDialogPlugin.AddOption(saves[i].Summary, null, voidFunction);
+            }
             this.Plugins.OptionDialogPlugin.EndAddOptions();
             this.Plugins.OptionDialogPlugin.ShowOptionDialog(ShowPosition.Center);
         }
@@ -1638,67 +1725,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.SaveFileName = "QuitSave" + this.SaveFileExtension;
             this.SaveGameToDisk(this.SaveFileName);
         }
-
-        private void SaveGameToPosition01()
-        {
-            this.SaveFileName = "Save01" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition02()
-        {
-            this.SaveFileName = "Save02" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition03()
-        {
-            this.SaveFileName = "Save03" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition04()
-        {
-            this.SaveFileName = "Save04" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition05()
-        {
-            this.SaveFileName = "Save05" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition06()
-        {
-            this.SaveFileName = "Save06" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition07()
-        {
-            this.SaveFileName = "Save07" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition08()
-        {
-            this.SaveFileName = "Save08" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition09()
-        {
-            this.SaveFileName = "Save09" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
-        private void SaveGameToPosition10()
-        {
-            this.SaveFileName = "Save10" + this.SaveFileExtension;
-            this.SaveGameToDisk(this.SaveFileName);
-        }
-
+ 
         public void SaveGameWhenCrash(String _savePath)
         {
             this.SaveFileName = _savePath;
@@ -1951,11 +1978,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
                 if (id == 2 || id == 3 || id == 6 || id == 8)
                 {
-                    if (id == 6) //如果是灭火
-                    {
-                        this.CurrentTroop.Operated = true;
-                        this.CurrentTroop.mingling = "——";
-                    }
+
                 }
                 else if ((this.CurrentTroop.CastTargetKind == TroopCastTargetKind.特定默认) || (this.CurrentTroop.CastTargetKind == TroopCastTargetKind.特定))
                 {
@@ -2157,11 +2180,11 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     dialog.SpeakingPerson = Session.Current.Scenario.Persons.GetGameObject(dialog.SpeakingPersonID) as Person;//修复部队事件未识别说话武将
                     if (dialog.SpeakingPerson !=null)
                     {
-                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(dialog.SpeakingPerson, null, dialog.Text, te.Image, te.Sound);
+                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(dialog.SpeakingPerson, null, dialog.Text, te.Image, te.Sound,te.TryToShowString);
                     }
                     else
                     {
-                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(troop.Leader, null, dialog.Text, te.Image, te.Sound);
+                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(troop.Leader, null, dialog.Text, te.Image, te.Sound,te.TryToShowString);
                     }
                 }
                 if (Setting.Current.GlobalVariables.DialogShowTime > 0)
@@ -2238,11 +2261,11 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 {
                     if (dialog.SpeakingPerson != null)
                     {
-                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(dialog.SpeakingPerson, null, dialog.Text, e.Image, e.Sound);
+                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(dialog.SpeakingPerson, null, dialog.Text, e.Image, e.Sound,e.TryToShowString);
                     }
                     else
                     {
-                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(a.BelongedFaction.Leader, null, dialog.Text, e.Image, e.Sound);
+                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(a.BelongedFaction.Leader, null, dialog.Text, e.Image, e.Sound,e.TryToShowString);
                     }
                 }
 
@@ -2648,7 +2671,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.mainMapLayer.StopThreads();
             if (Session.GlobalVariables.HardcoreMode)
             {
-                this.SaveGameQuitPosition();
+                this.SaveGameAutoPosition();
             }
             
             if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop || Platform.PlatFormType == PlatFormType.Android)
@@ -2746,6 +2769,37 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     //this.RefreshDisableRects();
                     //
                 }                
+            }
+
+            if (cloudLayer.IsVisible)
+            {
+                if (cloudLayer.IsStart)
+                {
+
+                }
+                else
+                {
+                    if (this.mainMapLayer.DisplayingMapTiles.Exists(ma => ma == null || ma.TileTexture == null))
+                    {
+
+                    }
+                    else
+                    {
+                        cloudLayer.IsStart = true;
+                    }
+                }
+                cloudLayer.Update(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds));
+            }
+
+            if (dantiaoLayer == null)
+            {
+
+            }
+            else
+            {
+                dantiaoLayer.Update(Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds));
+
+                return;
             }
 
             if (this.Plugins.ToolBarPlugin != null)
@@ -2866,6 +2920,11 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                         break;
                 }
 
+                var optionDialog = Session.MainGame.mainGameScreen.Plugins.OptionDialogPlugin as OptionDialogPlugin.OptionDialogPlugin;
+                if(optionDialog.IsShowing)
+                {
+                    optionDialog.Update(gameTime);
+                }
                 /*}
                 catch (OutOfMemoryException)
                 {
@@ -3216,12 +3275,12 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 }
                 else
                 {
-                    this.viewportSize.X = Session.ResolutionX;  // Platform.GraphicsDevice.Viewport.Width;
-                    this.viewportSize.Y = Convert.ToInt32(Session.ResolutionY - this.Plugins.ToolBarPlugin.Height);  // Platform.GraphicsDevice.Viewport.Height - this.Plugins.ToolBarPlugin.Height;
+                    this.viewportSize.X = Session.ResolutionX - 20;  // Platform.GraphicsDevice.Viewport.Width;
+                    this.viewportSize.Y = Convert.ToInt32(Session.ResolutionY - this.Plugins.ToolBarPlugin.Height - 10);  // Platform.GraphicsDevice.Viewport.Height - this.Plugins.ToolBarPlugin.Height;
                 }
 
-                this.viewportSizeFull.X = Session.ResolutionX;
-                this.viewportSizeFull.Y = Session.ResolutionY;
+                this.viewportSizeFull.X = Platform.GraphicsDevice.Viewport.Width;
+                this.viewportSizeFull.Y = Platform.GraphicsDevice.Viewport.Height;
 
                 this.Plugins.ToolBarPlugin.SetRealViewportSize(new Point(this.viewportSize.X, this.viewportSize.Y));
 
@@ -3462,6 +3521,14 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             }
         }
 
+        public bool IsPlayingTroopVoice
+        {
+            get
+            {
+                return Setting.Current.GlobalVariables.TroopVoice;
+            }
+        }
+
         public bool IsPlayingMusic
         {
             get
@@ -3570,9 +3637,9 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.Plugins.ConfirmationDialogPlugin.IsShowing = true;
         }
 
-        private void ReturnToMainMenu()
+        public void ReturnToMainMenu()
         {
-            Session.MainGame.loadingScreen = new LoadingScreen();
+            Session.MainGame.loadingScreen = new LoadingScreen("End", "");
             Session.MainGame.loadingScreen.LoadScreenEvent += (sender0, e0) =>
             {
                 Platform.Sleep(1000);
@@ -3590,6 +3657,51 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             get
             {
                 return Session.GlobalVariables.SkyEyeSimpleNotification;
+            }
+        }
+        public void updateGameScreenByCurrentTarget()
+        {            
+            if ((((this.CurrentArchitecture != null) && (this.CurrentTroop != null)) && (this.CurrentTroop.BelongedFaction == Session.Current.Scenario.CurrentPlayer)) && (this.CurrentArchitecture.BelongedFaction == Session.Current.Scenario.CurrentPlayer) && this.CurrentTroop.Operated == false)
+            {
+                if (!(this.Plugins.ContextMenuPlugin.IsShowing || !Session.Current.Scenario.CurrentPlayer.Controlling))
+                {
+                    this.Plugins.ContextMenuPlugin.IsShowing = true;
+                    this.Plugins.ContextMenuPlugin.SetCurrentGameObject(this);
+                    this.Plugins.ContextMenuPlugin.SetMenuKindByName("ArchitectureTroopLeftClick");
+                    this.Plugins.ContextMenuPlugin.Prepare(this.SelectorStartPosition.X, this.SelectorStartPosition.Y, base.viewportSize);
+                    this.bianduiLiebiaoBiaoji = "ArchitectureTroopLeftClick";
+                }
+            }
+            else if ((this.CurrentTroop != null) && (this.CurrentTroop.BelongedFaction == Session.Current.Scenario.CurrentPlayer) && this.CurrentTroop.Operated == false)
+            {
+                if (!this.Plugins.ContextMenuPlugin.IsShowing && Session.Current.Scenario.IsPlayerControlling())
+                {
+                    this.Plugins.ContextMenuPlugin.IsShowing = true;
+                    this.Plugins.ContextMenuPlugin.SetCurrentGameObject(this.CurrentTroop);
+                    this.Plugins.ContextMenuPlugin.SetMenuKindByName("TroopLeftClick");
+                    this.Plugins.ContextMenuPlugin.Prepare(this.SelectorStartPosition.X, this.SelectorStartPosition.Y, base.viewportSize);
+                    this.bianduiLiebiaoBiaoji = "TroopLeftClick";
+                    if (!this.Plugins.ContextMenuPlugin.IsShowing && (this.CurrentTroop.CutRoutewayDays > 0))
+                    {
+                        this.CurrentTroop.Leader.TextDestinationString = this.CurrentTroop.CutRoutewayDays.ToString();
+                        this.Plugins.tupianwenziPlugin.SetConfirmationDialog(this.Plugins.ConfirmationDialogPlugin, new GameDelegates.VoidFunction(this.CurrentTroop.StopCutRouteway), null);
+                        this.Plugins.ConfirmationDialogPlugin.SetPosition(ShowPosition.Center);
+                        this.Plugins.tupianwenziPlugin.SetGameObjectBranch(this.CurrentTroop.Leader, this.CurrentTroop.Leader, TextMessageKind.StopCutRouteway, "StopCutRouteway");
+                        this.Plugins.tupianwenziPlugin.IsShowing = true;
+                    }
+                }
+            }
+            else if (((this.CurrentArchitecture != null) && (this.CurrentArchitecture.BelongedFaction == Session.Current.Scenario.CurrentPlayer)) && !(this.Plugins.ContextMenuPlugin.IsShowing || !Session.Current.Scenario.IsPlayerControlling()))
+            {
+                this.Plugins.ContextMenuPlugin.IsShowing = true;
+                this.Plugins.ContextMenuPlugin.SetCurrentGameObject(this.CurrentArchitecture);
+                this.Plugins.ContextMenuPlugin.SetMenuKindByName("ArchitectureLeftClick");
+                this.Plugins.ContextMenuPlugin.Prepare(this.SelectorStartPosition.X, this.SelectorStartPosition.Y, base.viewportSize);
+
+                this.bianduiLiebiaoBiaoji = "ArchitectureLeftClick";
+                this.ShowBianduiLiebiao(UndoneWorkKind.None, FrameKind.Military, FrameFunction.Browse, false, true, false, true,
+                    this.CurrentArchitecture.Militaries, this.CurrentArchitecture.ZhengzaiBuchongDeBiandui(), "", "", this.CurrentArchitecture.MilitaryPopulation);
+                this.ShowArchitectureSurveyPlugin(this.CurrentArchitecture);
             }
         }
     }

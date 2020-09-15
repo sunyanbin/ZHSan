@@ -145,6 +145,9 @@ namespace GameObjects
         [DataMember]
         public bool Minor = false;
 
+        [DataMember]
+        public string TryToShowString { get; set; }
+
         private bool involveLeader = false;
         public bool InvolveLeader
         {
@@ -202,7 +205,7 @@ namespace GameObjects
                     Session.Current.Scenario.YearTable.addPersonInGameBiography(i.SpeakingPerson, Session.Current.Scenario.Date, i.Text);
                 }
             }
-            if (nextScenario.Length > 0)
+            if (nextScenario != null && nextScenario.Length > 0)
             {
                 // Session.Current.Scenario.EnableLoadAndSave = false;
 
@@ -358,15 +361,7 @@ namespace GameObjects
             {
                 foreach (Person p in allPersons)
                 {
-                    bool ok = true;
-                    foreach (Condition c in i.Value)
-                    {
-                        if (!c.CheckCondition(p, this))
-                        {
-                            ok = false;
-                            break;
-                        }
-                    }
+                    bool ok = Condition.CheckConditionList(i.Value, p, this);
                     if (ok)
                     {
                         if (this.person[i.Key].Contains(null) || this.person[i.Key].Contains(p))
@@ -383,17 +378,14 @@ namespace GameObjects
                 {
                     if (p != null /*&& p.ID >= 7000 && p.ID < 8000*/)
                     {
-                        bool ok = true;
+                        bool ok;
                         if (this.personCond.ContainsKey(i.Key))
                         {
-                            foreach (Condition c in this.personCond[i.Key])
-                            {
-                                if (!c.CheckCondition(p, this))
-                                {
-                                    ok = false;
-                                    break;
-                                }
-                            }
+                            ok = Condition.CheckConditionList(this.personCond[i.Key], p, this);
+                        }
+                        else
+                        {
+                            ok = true;
                         }
                         if (ok)
                         {
@@ -541,21 +533,8 @@ namespace GameObjects
                 if (Session.Current.Scenario.Date.Month > this.EndMonth) return false;
             }
 
-            foreach (Condition i in this.architectureCond)
-            {
-                if (!i.CheckCondition(a, this))
-                {
-                    return false;
-                }
-            }
-
-            foreach (Condition i in this.factionCond)
-            {
-                if (a.BelongedFaction == null || !i.CheckCondition(a.BelongedFaction, this))
-                {
-                    return false;
-                }
-            }
+            if (!Condition.CheckConditionList(this.architectureCond, a, this)) return false;
+            if (!Condition.CheckConditionList(this.factionCond, a.BelongedFaction, this)) return false;
 
             if (architecture.Count > 0 || faction.Count > 0)
             {

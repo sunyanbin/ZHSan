@@ -57,6 +57,7 @@ namespace GameObjects.ArchitectureDetail
                 {
                     this.texture = CacheManager.GetTempTexture("Content/Textures/Resources/Architecture/" + this.ID.ToString() + ".png");
                 }
+
                 return this.texture;
             }
         }
@@ -225,7 +226,7 @@ namespace GameObjects.ArchitectureDetail
                 this.hasAgriculture = value;
             }
         }
-        
+
         public string HasAgricultureString
         {
             get
@@ -566,4 +567,3 @@ namespace GameObjects.ArchitectureDetail
         }
     }
 }
-

@@ -35,10 +35,6 @@ namespace GameGlobal
         [DataMember]
         public int ChangeCapitalCost = 0x1388;
         [DataMember]
-        public int ClearFieldAgricultureCostUnit = 3;
-        [DataMember]
-        public int ClearFieldFundCostUnit = 50;
-        [DataMember]
         public int ConvincePersonCost = 200;
         [DataMember]
         public float DefaultPopulationDevelopingRate = 6E-05f;
@@ -65,8 +61,6 @@ namespace GameGlobal
         [DataMember]
         public int JailBreakArchitectureCost = 200;
         [DataMember]
-        public int HireNoFactionPersonCost = 100;
-        [DataMember]
         public int InstigateArchitectureCost = 200;
         [DataMember]
         public int InternalFundCost = 5;
@@ -92,8 +86,6 @@ namespace GameGlobal
         public int RewardPersonCost = 100;
         [DataMember]
         public int SellFoodCommerce = 500;
-        [DataMember]
-        public int SendSpyCost = 200;
         [DataMember]
         public int SurroundArchitectureDominationUnit = 2;
         [DataMember]
@@ -207,7 +199,7 @@ namespace GameGlobal
         [DataMember]
         public float AIRecruitPopulationCapBackendMultiply = 0.5f;
         [DataMember]
-        public float AIRecruitPopulationCapHostilelineMultiply = 1.2f;
+        public float AIRecruitPopulationCapHostilelineMultiply = 2.0f;
         [DataMember]
         public float AIRecruitPopulationCapStrategyTendencyMulitply = 0.2f;
         [DataMember]
@@ -242,12 +234,6 @@ namespace GameGlobal
         public int AIObeyStrategyTendencyChance = 90;
         [DataMember]
         public int AIOffendMaxDiplomaticRelationMultiply = 20;
-        [DataMember]
-        public float AIOffendReserveAdd = 0.8f;
-        [DataMember]
-        public float AIOffendReserveBCDiffMultiply = 0.1f;
-        [DataMember]
-        public float AIOffendDefendingTroopRate = 0.75f;
         [DataMember]
         public float AIOffendDefendTroopAdd = 1.2f;
         [DataMember]
@@ -297,8 +283,6 @@ namespace GameGlobal
         [DataMember]
         public float VeryCloseAbilityRate = 1.2F;
         [DataMember]
-        public int RetainFeiziPersonalLoyalty = 0;
-        [DataMember]
         public int AIEncirclePlayerRate = 0;
         [DataMember]
         public float BasicAIExtraPerson = 0;
@@ -313,7 +297,7 @@ namespace GameGlobal
         [DataMember]
         public int MakeMarrigeIdealLimit = 5;
         [DataMember]
-        public int MakeMarriageCost = 80000;
+        public int MakeMarriageCost = 8000;
         [DataMember]
         public int NafeiCost = 50000;
         [DataMember]
@@ -333,28 +317,28 @@ namespace GameGlobal
         [DataMember]
         public float SearchPersonArchitectureCountPower = 0;
         [DataMember]
-        public float InternalSurplusMinEffect = 0.2f;
-        [DataMember]
         public int DayInTurn = 1;
         [DataMember]
         public int MaxRelation = 10000;
         [DataMember]
-        public float HougongRelationHateFactor = 1.0f;
+        public float HougongRelationHateFactor = 3.0f;
         [DataMember]
-        public int AIMaxFeizi = 20;
+        public int AIMaxFeizi = 3000;
         [DataMember]
         public int MaxReputationForRecruit = 3000000;
         [DataMember]
         public float TroopMoraleChange = 1.0f;
         [DataMember]
         public float RecruitPopualationDecreaseRate = 0.25f;
+        [DataMember]
+        public float AIOffensiveCampaignRequiredScaleFactor = 1.0f;
 
         public Parameters Clone()
         {
             return this.MemberwiseClone() as Parameters;
         }
 
-        public void InitializeGameParameters()
+        public void InitializeGameParameters(string str)
         {
             XmlDocument document = new XmlDocument();
 
@@ -362,183 +346,237 @@ namespace GameGlobal
             document.LoadXml(xml);
 
             XmlNode nextSibling = document.FirstChild.NextSibling;
-            FindTreasureChance = int.Parse(nextSibling.Attributes.GetNamedItem("FindTreasureChance").Value);
-            LearnSkillDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnSkillDays").Value);
-            LearnStuntDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnStuntDays").Value);
-            LearnTitleDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnTitleDays").Value);
-            SearchDays = int.Parse(nextSibling.Attributes.GetNamedItem("SearchDays").Value);
-            FollowedLeaderOffenceRateIncrement = float.Parse(nextSibling.Attributes.GetNamedItem("FollowedLeaderOffenceRateIncrement").Value);
-            FollowedLeaderDefenceRateIncrement = float.Parse(nextSibling.Attributes.GetNamedItem("FollowedLeaderDefenceRateIncrement").Value);
-            InternalRate = float.Parse(nextSibling.Attributes.GetNamedItem("InternalRate").Value);
-            TrainingRate = float.Parse(nextSibling.Attributes.GetNamedItem("TrainingRate").Value);
-            RecruitmentRate = float.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentRate").Value);
-            FundRate = float.Parse(nextSibling.Attributes.GetNamedItem("FundRate").Value);
-            FoodRate = float.Parse(nextSibling.Attributes.GetNamedItem("FoodRate").Value);
-            TroopDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("TroopDamageRate").Value);
-            ArchitectureDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("ArchitectureDamageRate").Value);
-            DefaultPopulationDevelopingRate = float.Parse(nextSibling.Attributes.GetNamedItem("DefaultPopulationDevelopingRate").Value);
-            BuyFoodAgriculture = int.Parse(nextSibling.Attributes.GetNamedItem("BuyFoodAgriculture").Value);
-            SellFoodCommerce = int.Parse(nextSibling.Attributes.GetNamedItem("SellFoodCommerce").Value);
-            FundToFoodMultiple = int.Parse(nextSibling.Attributes.GetNamedItem("FundToFoodMultiple").Value);
-            FoodToFundDivisor = int.Parse(nextSibling.Attributes.GetNamedItem("FoodToFundDivisor").Value);
-            InternalFundCost = int.Parse(nextSibling.Attributes.GetNamedItem("InternalFundCost").Value);
-            RecruitmentFundCost = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentFundCost").Value);
-            RecruitmentDomination = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentDomination").Value);
-            RecruitmentMorale = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentMorale").Value);
-            ChangeCapitalCost = int.Parse(nextSibling.Attributes.GetNamedItem("ChangeCapitalCost").Value);
-            SelectPrinceCost = int.Parse(nextSibling.Attributes.GetNamedItem("SelectPrinceCost").Value);
-            TransferCostPerMilitary = int.Parse(nextSibling.Attributes.GetNamedItem("TransferCostPerMilitary").Value); //运兵耗钱
-            TransferFoodPerMilitary = int.Parse(nextSibling.Attributes.GetNamedItem("TransferFoodPerMilitary").Value);  //运兵耗粮
-            HireNoFactionPersonCost = int.Parse(nextSibling.Attributes.GetNamedItem("HireNoFactionPersonCost").Value);
-            ConvincePersonCost = int.Parse(nextSibling.Attributes.GetNamedItem("ConvincePersonCost").Value);
-            RewardPersonCost = int.Parse(nextSibling.Attributes.GetNamedItem("RewardPersonCost").Value);
-            SendSpyCost = int.Parse(nextSibling.Attributes.GetNamedItem("SendSpyCost").Value);
-            DestroyArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("DestroyArchitectureCost").Value);
-            InstigateArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("InstigateArchitectureCost").Value);
-            GossipArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("GossipArchitectureCost").Value);
-            JailBreakArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("JailBreakArchitectureCost").Value);
-            ClearFieldFundCostUnit = int.Parse(nextSibling.Attributes.GetNamedItem("ClearFieldFundCostUnit").Value);
-            ClearFieldAgricultureCostUnit = int.Parse(nextSibling.Attributes.GetNamedItem("ClearFieldAgricultureCostUnit").Value);
-            SurroundArchitectureDominationUnit = int.Parse(nextSibling.Attributes.GetNamedItem("SurroundArchitectureDominationUnit").Value);
-            FireDamageScale = float.Parse(nextSibling.Attributes.GetNamedItem("FireDamageScale").Value);
-            AIFundRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFundRate").Value);
-            AIFoodRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFoodRate").Value);
-            AITroopOffenceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopOffenceRate").Value);
-            AITroopDefenceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopDefenceRate").Value);
-            AIArchitectureDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArchitectureDamageRate").Value);
-            AITrainingSpeedRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITrainingSpeedRate").Value);
-            AIRecruitmentSpeedRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitmentSpeedRate").Value);
-            AIOfficerExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIOfficerExperienceRate").Value);
-            AIArmyExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArmyExperienceRate").Value);
-            AIAntiStratagem = int.Parse(nextSibling.Attributes.GetNamedItem("AIAntiStratagem").Value);
-            AIAntiSurround = int.Parse(nextSibling.Attributes.GetNamedItem("AIAntiSurround").Value);
+            if (str == "")
+            {
+                FindTreasureChance = int.Parse(nextSibling.Attributes.GetNamedItem("FindTreasureChance").Value);
+                LearnSkillDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnSkillDays").Value);
+                LearnStuntDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnStuntDays").Value);
+                LearnTitleDays = int.Parse(nextSibling.Attributes.GetNamedItem("LearnTitleDays").Value);
+                SearchDays = int.Parse(nextSibling.Attributes.GetNamedItem("SearchDays").Value);
+                FollowedLeaderOffenceRateIncrement = float.Parse(nextSibling.Attributes.GetNamedItem("FollowedLeaderOffenceRateIncrement").Value);
+                FollowedLeaderDefenceRateIncrement = float.Parse(nextSibling.Attributes.GetNamedItem("FollowedLeaderDefenceRateIncrement").Value);
+                InternalRate = float.Parse(nextSibling.Attributes.GetNamedItem("InternalRate").Value);
+                TrainingRate = float.Parse(nextSibling.Attributes.GetNamedItem("TrainingRate").Value);
+                RecruitmentRate = float.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentRate").Value);
+                FundRate = float.Parse(nextSibling.Attributes.GetNamedItem("FundRate").Value);
+                FoodRate = float.Parse(nextSibling.Attributes.GetNamedItem("FoodRate").Value);
+                TroopDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("TroopDamageRate").Value);
+                ArchitectureDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("ArchitectureDamageRate").Value);
+                DefaultPopulationDevelopingRate = float.Parse(nextSibling.Attributes.GetNamedItem("DefaultPopulationDevelopingRate").Value);
+                BuyFoodAgriculture = int.Parse(nextSibling.Attributes.GetNamedItem("BuyFoodAgriculture").Value);
+                SellFoodCommerce = int.Parse(nextSibling.Attributes.GetNamedItem("SellFoodCommerce").Value);
+                FundToFoodMultiple = int.Parse(nextSibling.Attributes.GetNamedItem("FundToFoodMultiple").Value);
+                FoodToFundDivisor = int.Parse(nextSibling.Attributes.GetNamedItem("FoodToFundDivisor").Value);
+                InternalFundCost = int.Parse(nextSibling.Attributes.GetNamedItem("InternalFundCost").Value);
+                RecruitmentFundCost = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentFundCost").Value);
+                RecruitmentDomination = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentDomination").Value);
+                RecruitmentMorale = int.Parse(nextSibling.Attributes.GetNamedItem("RecruitmentMorale").Value);
+                ChangeCapitalCost = int.Parse(nextSibling.Attributes.GetNamedItem("ChangeCapitalCost").Value);
+                SelectPrinceCost = int.Parse(nextSibling.Attributes.GetNamedItem("SelectPrinceCost").Value);
+                TransferCostPerMilitary = int.Parse(nextSibling.Attributes.GetNamedItem("TransferCostPerMilitary").Value); //运兵耗钱
+                TransferFoodPerMilitary = int.Parse(nextSibling.Attributes.GetNamedItem("TransferFoodPerMilitary").Value);  //运兵耗粮
+                ConvincePersonCost = int.Parse(nextSibling.Attributes.GetNamedItem("ConvincePersonCost").Value);
+                RewardPersonCost = int.Parse(nextSibling.Attributes.GetNamedItem("RewardPersonCost").Value);
+                DestroyArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("DestroyArchitectureCost").Value);
+                InstigateArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("InstigateArchitectureCost").Value);
+                GossipArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("GossipArchitectureCost").Value);
+                JailBreakArchitectureCost = int.Parse(nextSibling.Attributes.GetNamedItem("JailBreakArchitectureCost").Value);
+                SurroundArchitectureDominationUnit = int.Parse(nextSibling.Attributes.GetNamedItem("SurroundArchitectureDominationUnit").Value);
+                FireDamageScale = float.Parse(nextSibling.Attributes.GetNamedItem("FireDamageScale").Value);
+                AIFundRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFundRate").Value);
+                AIFoodRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFoodRate").Value);
+                AITroopOffenceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopOffenceRate").Value);
+                AITroopDefenceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopDefenceRate").Value);
+                AIArchitectureDamageRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArchitectureDamageRate").Value);
+                AITrainingSpeedRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITrainingSpeedRate").Value);
+                AIRecruitmentSpeedRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitmentSpeedRate").Value);
+                AIOfficerExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIOfficerExperienceRate").Value);
+                AIArmyExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArmyExperienceRate").Value);
+                AIAntiStratagem = int.Parse(nextSibling.Attributes.GetNamedItem("AIAntiStratagem").Value);
+                AIAntiSurround = int.Parse(nextSibling.Attributes.GetNamedItem("AIAntiSurround").Value);
 
-            AIFundYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFundYearIncreaseRate").Value);
-            AIFoodYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFoodYearIncreaseRate").Value);
-            AITroopOffenceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopOffenceYearIncreaseRate").Value);
-            AITroopDefenceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopDefenceYearIncreaseRate").Value);
-            AIArchitectureDamageYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArchitectureDamageYearIncreaseRate").Value);
-            AITrainingSpeedYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITrainingSpeedYearIncreaseRate").Value);
-            AIRecruitmentSpeedYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitmentSpeedYearIncreaseRate").Value);
-            AIOfficerExperienceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIOfficerExperienceYearIncreaseRate").Value);
-            AIArmyExperienceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArmyExperienceYearIncreaseRate").Value);
-            AIAntiStratagemIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIAntiStratagemIncreaseRate").Value);
-            AIAntiSurroundIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIAntiSurroundIncreaseRate").Value);
+                AIFundYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFundYearIncreaseRate").Value);
+                AIFoodYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFoodYearIncreaseRate").Value);
+                AITroopOffenceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopOffenceYearIncreaseRate").Value);
+                AITroopDefenceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITroopDefenceYearIncreaseRate").Value);
+                AIArchitectureDamageYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArchitectureDamageYearIncreaseRate").Value);
+                AITrainingSpeedYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AITrainingSpeedYearIncreaseRate").Value);
+                AIRecruitmentSpeedYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitmentSpeedYearIncreaseRate").Value);
+                AIOfficerExperienceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIOfficerExperienceYearIncreaseRate").Value);
+                AIArmyExperienceYearIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIArmyExperienceYearIncreaseRate").Value);
+                AIAntiStratagemIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIAntiStratagemIncreaseRate").Value);
+                AIAntiSurroundIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIAntiSurroundIncreaseRate").Value);
 
-            AIBackendArmyReserveCalmBraveDifferenceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveCalmBraveDifferenceMultiply").Value);
-            AIBackendArmyReserveAmbitionMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveAmbitionMultiply").Value);
-            AIBackendArmyReserveAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveAdd").Value);
-            AIBackendArmyReserveMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveMultiply").Value);
-            AITradePeriod = int.Parse(nextSibling.Attributes.GetNamedItem("AITradePeriod").Value);
-            AITreasureChance = int.Parse(nextSibling.Attributes.GetNamedItem("AITreasureChance").Value);
-            AITreasureCountMax = int.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountMax").Value);
-            AITreasureCountCappedTitleLevelAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountCappedTitleLevelAdd").Value);
-            AITreasureCountCappedTitleLevelMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountCappedTitleLevelMultiply").Value);
-            AIGiveTreasureMaxWorth = int.Parse(nextSibling.Attributes.GetNamedItem("AIGiveTreasureMaxWorth").Value);
-            AIFacilityFundMonthWaitParam = float.Parse(nextSibling.Attributes.GetNamedItem("AIFacilityFundMonthWaitParam").Value);
-            AIFacilityDestroyValueRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFacilityDestroyValueRate").Value);
-            AIBuildHougongUnambitionProbWeight = float.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongUnambitionProbWeight").Value);
-            AIBuildHougongSpaceBuiltProbWeight = float.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongSpaceBuiltProbWeight").Value);
-            AIBuildHougongMaxSizeAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongMaxSizeAdd").Value);
-            AIBuildHougongSkipSizeChance = int.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongSkipSizeChance").Value);
-            AINafeiUncreultyProbAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AINafeiUncreultyProbAdd").Value);
-            AINafeiAbilityThresholdRate = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiAbilityThresholdRate").Value);
-            AINafeiStealSpouseThresholdRateAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiStealSpouseThresholdRateAdd").Value);
-            AINafeiStealSpouseThresholdRateMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiStealSpouseThresholdRateMultiply").Value);
-            AINafeiMaxAgeThresholdAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AINafeiMaxAgeThresholdAdd").Value);
-            AINafeiMaxAgeThresholdMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiMaxAgeThresholdMultiply").Value);
-            AINafeiSkipChanceAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiSkipChanceAdd").Value);
-            AINafeiSkipChanceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiSkipChanceMultiply").Value);
-            AIChongxingChanceAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIChongxingChanceAdd").Value);
-            AIChongxingChanceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIChongxingChanceMultiply").Value);
-            AIRecruitPopulationCapMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapMultiply").Value);
-            AIRecruitPopulationCapBackendMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapBackendMultiply").Value);
-            AIRecruitPopulationCapHostilelineMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapHostilelineMultiply").Value);
-            AIRecruitPopulationCapStrategyTendencyMulitply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapStrategyTendencyMulitply").Value);
-            AIRecruitPopulationCapStrategyTendencyAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapStrategyTendencyAdd").Value);
-            AINewMilitaryPopulationThresholdDivide = int.Parse(nextSibling.Attributes.GetNamedItem("AINewMilitaryPopulationThresholdDivide").Value);
-            AINewMilitaryPersonThresholdDivide = int.Parse(nextSibling.Attributes.GetNamedItem("AINewMilitaryPersonThresholdDivide").Value);
-            AIExecuteMaxUncreulty = int.Parse(nextSibling.Attributes.GetNamedItem("AIExecuteMaxUncreulty").Value);
-            AIExecutePersonIdealToleranceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIExecutePersonIdealToleranceMultiply").Value);
+                AIBackendArmyReserveCalmBraveDifferenceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveCalmBraveDifferenceMultiply").Value);
+                AIBackendArmyReserveAmbitionMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveAmbitionMultiply").Value);
+                AIBackendArmyReserveAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveAdd").Value);
+                AIBackendArmyReserveMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIBackendArmyReserveMultiply").Value);
+                AITradePeriod = int.Parse(nextSibling.Attributes.GetNamedItem("AITradePeriod").Value);
+                AITreasureChance = int.Parse(nextSibling.Attributes.GetNamedItem("AITreasureChance").Value);
+                AITreasureCountMax = int.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountMax").Value);
+                AITreasureCountCappedTitleLevelAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountCappedTitleLevelAdd").Value);
+                AITreasureCountCappedTitleLevelMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AITreasureCountCappedTitleLevelMultiply").Value);
+                AIGiveTreasureMaxWorth = int.Parse(nextSibling.Attributes.GetNamedItem("AIGiveTreasureMaxWorth").Value);
+                AIFacilityFundMonthWaitParam = float.Parse(nextSibling.Attributes.GetNamedItem("AIFacilityFundMonthWaitParam").Value);
+                AIFacilityDestroyValueRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIFacilityDestroyValueRate").Value);
+                AIBuildHougongUnambitionProbWeight = float.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongUnambitionProbWeight").Value);
+                AIBuildHougongSpaceBuiltProbWeight = float.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongSpaceBuiltProbWeight").Value);
+                AIBuildHougongMaxSizeAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongMaxSizeAdd").Value);
+                AIBuildHougongSkipSizeChance = int.Parse(nextSibling.Attributes.GetNamedItem("AIBuildHougongSkipSizeChance").Value);
+                AINafeiUncreultyProbAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AINafeiUncreultyProbAdd").Value);
+                AINafeiAbilityThresholdRate = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiAbilityThresholdRate").Value);
+                AINafeiStealSpouseThresholdRateAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiStealSpouseThresholdRateAdd").Value);
+                AINafeiStealSpouseThresholdRateMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiStealSpouseThresholdRateMultiply").Value);
+                AINafeiMaxAgeThresholdAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AINafeiMaxAgeThresholdAdd").Value);
+                AINafeiMaxAgeThresholdMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiMaxAgeThresholdMultiply").Value);
+                AINafeiSkipChanceAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiSkipChanceAdd").Value);
+                AINafeiSkipChanceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AINafeiSkipChanceMultiply").Value);
+                AIChongxingChanceAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIChongxingChanceAdd").Value);
+                AIChongxingChanceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIChongxingChanceMultiply").Value);
+                AIRecruitPopulationCapMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapMultiply").Value);
+                AIRecruitPopulationCapBackendMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapBackendMultiply").Value);
+                AIRecruitPopulationCapHostilelineMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapHostilelineMultiply").Value);
+                AIRecruitPopulationCapStrategyTendencyMulitply = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapStrategyTendencyMulitply").Value);
+                AIRecruitPopulationCapStrategyTendencyAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIRecruitPopulationCapStrategyTendencyAdd").Value);
+                AINewMilitaryPopulationThresholdDivide = int.Parse(nextSibling.Attributes.GetNamedItem("AINewMilitaryPopulationThresholdDivide").Value);
+                AINewMilitaryPersonThresholdDivide = int.Parse(nextSibling.Attributes.GetNamedItem("AINewMilitaryPersonThresholdDivide").Value);
+                AIExecuteMaxUncreulty = int.Parse(nextSibling.Attributes.GetNamedItem("AIExecuteMaxUncreulty").Value);
+                AIExecutePersonIdealToleranceMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIExecutePersonIdealToleranceMultiply").Value);
 
-            AIHougongArchitectureCountProbMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIHougongArchitectureCountProbMultiply").Value);
-            AIHougongArchitectureCountProbPower = float.Parse(nextSibling.Attributes.GetNamedItem("AIHougongArchitectureCountProbPower").Value);
+                AIHougongArchitectureCountProbMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIHougongArchitectureCountProbMultiply").Value);
+                AIHougongArchitectureCountProbPower = float.Parse(nextSibling.Attributes.GetNamedItem("AIHougongArchitectureCountProbPower").Value);
 
-            FireStayProb = int.Parse(nextSibling.Attributes.GetNamedItem("FireStayProb").Value);
-            FireSpreadProbMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("FireSpreadProbMultiply").Value);
+                FireStayProb = int.Parse(nextSibling.Attributes.GetNamedItem("FireStayProb").Value);
+                FireSpreadProbMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("FireSpreadProbMultiply").Value);
 
-            MinPregnantProb = int.Parse(nextSibling.Attributes.GetNamedItem("MinPregnantProb").Value);
+                MinPregnantProb = int.Parse(nextSibling.Attributes.GetNamedItem("MinPregnantProb").Value);
 
-            InternalExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("InternalExperienceRate").Value);
-            AbilityExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AbilityExperienceRate").Value);
-            ArmyExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("ArmyExperienceRate").Value);
+                InternalExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("InternalExperienceRate").Value);
+                AbilityExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("AbilityExperienceRate").Value);
+                ArmyExperienceRate = float.Parse(nextSibling.Attributes.GetNamedItem("ArmyExperienceRate").Value);
 
-            AIAttackChanceIfUnfull = float.Parse(nextSibling.Attributes.GetNamedItem("AIAttackChanceIfUnfull").Value);
-            AIObeyStrategyTendencyChance = int.Parse(nextSibling.Attributes.GetNamedItem("AIObeyStrategyTendencyChance").Value);
-            AIOffendMaxDiplomaticRelationMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendMaxDiplomaticRelationMultiply").Value);
-            AIOffendReserveAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendReserveAdd").Value);
-            AIOffendReserveBCDiffMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendReserveBCDiffMultiply").Value);
-            AIOffendDefendingTroopRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendDefendingTroopRate").Value);
-            AIOffendDefendTroopAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendDefendTroopAdd").Value);
-            AIOffendDefendTroopMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendDefendTroopMultiply").Value);
-            AIOffendIgnoreReserveProbAmbitionMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbAmbitionMultiply").Value);
-            AIOffendIgnoreReserveProbAmbitionAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbAmbitionAdd").Value);
-            AIOffendIgnoreReserveProbBCDiffMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbBCDiffMultiply").Value);
-            AIOffendIgnoreReserveProbBCDiffAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbBCDiffAdd").Value);
-            AIOffendIgnoreReserveChanceTroopRatioAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveChanceTroopRatioAdd").Value);
-            AIOffendIgnoreReserveChanceTroopRatioMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveChanceTroopRatioMultiply").Value);
-            PrincessMaintainenceCost = int.Parse(nextSibling.Attributes.GetNamedItem("PrincessMaintainenceCost").Value);
+                AIAttackChanceIfUnfull = float.Parse(nextSibling.Attributes.GetNamedItem("AIAttackChanceIfUnfull").Value);
+                AIObeyStrategyTendencyChance = int.Parse(nextSibling.Attributes.GetNamedItem("AIObeyStrategyTendencyChance").Value);
+                AIOffendMaxDiplomaticRelationMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendMaxDiplomaticRelationMultiply").Value);
+                AIOffendDefendTroopAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendDefendTroopAdd").Value);
+                AIOffendDefendTroopMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendDefendTroopMultiply").Value);
+                AIOffendIgnoreReserveProbAmbitionMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbAmbitionMultiply").Value);
+                AIOffendIgnoreReserveProbAmbitionAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbAmbitionAdd").Value);
+                AIOffendIgnoreReserveProbBCDiffMultiply = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbBCDiffMultiply").Value);
+                AIOffendIgnoreReserveProbBCDiffAdd = int.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveProbBCDiffAdd").Value);
+                AIOffendIgnoreReserveChanceTroopRatioAdd = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveChanceTroopRatioAdd").Value);
+                AIOffendIgnoreReserveChanceTroopRatioMultiply = float.Parse(nextSibling.Attributes.GetNamedItem("AIOffendIgnoreReserveChanceTroopRatioMultiply").Value);
+                PrincessMaintainenceCost = int.Parse(nextSibling.Attributes.GetNamedItem("PrincessMaintainenceCost").Value);
 
-            AIUniqueTroopFightingForceThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("AIUniqueTroopFightingForceThreshold").Value);
-            LearnSkillSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnSkillSuccessRate").Value);
-            LearnStuntSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnStuntSuccessRate").Value);
-            LearnTitleSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnTitleSuccessRate").Value);
+                AIUniqueTroopFightingForceThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("AIUniqueTroopFightingForceThreshold").Value);
+                LearnSkillSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnSkillSuccessRate").Value);
+                LearnStuntSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnStuntSuccessRate").Value);
+                LearnTitleSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("LearnTitleSuccessRate").Value);
 
-            AutoLearnSkillSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("AutoLearnSkillSuccessRate").Value);
-            AutoLearnStuntSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("AutoLearnStuntSuccessRate").Value);
+                AutoLearnSkillSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("AutoLearnSkillSuccessRate").Value);
+                AutoLearnStuntSuccessRate = int.Parse(nextSibling.Attributes.GetNamedItem("AutoLearnStuntSuccessRate").Value);
 
-            MilitaryPopulationCap = float.Parse(nextSibling.Attributes.GetNamedItem("MilitaryPopulationCap").Value);
-            MilitaryPopulationReloadQuantity = float.Parse(nextSibling.Attributes.GetNamedItem("MilitaryPopulationReloadQuantity").Value);
+                MilitaryPopulationCap = float.Parse(nextSibling.Attributes.GetNamedItem("MilitaryPopulationCap").Value);
+                MilitaryPopulationReloadQuantity = float.Parse(nextSibling.Attributes.GetNamedItem("MilitaryPopulationReloadQuantity").Value);
 
-            CloseThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("CloseThreshold").Value);
-            HateThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("HateThreshold").Value);
-            VeryCloseThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("VeryCloseThreshold").Value);
+                CloseThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("CloseThreshold").Value);
+                HateThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("HateThreshold").Value);
+                VeryCloseThreshold = int.Parse(nextSibling.Attributes.GetNamedItem("VeryCloseThreshold").Value);
 
-            MaxAITroopCountCandidates = int.Parse(nextSibling.Attributes.GetNamedItem("MaxAITroopCountCandidates").Value);
-            PopulationDevelopingRate = float.Parse(nextSibling.Attributes.GetNamedItem("PopulationDevelopingRate").Value);
+                MaxAITroopCountCandidates = int.Parse(nextSibling.Attributes.GetNamedItem("MaxAITroopCountCandidates").Value);
+                PopulationDevelopingRate = float.Parse(nextSibling.Attributes.GetNamedItem("PopulationDevelopingRate").Value);
 
-            CloseAbilityRate = float.Parse(nextSibling.Attributes.GetNamedItem("CloseAbilityRate").Value);
-            VeryCloseAbilityRate = float.Parse(nextSibling.Attributes.GetNamedItem("VeryCloseAbilityRate").Value);
+                CloseAbilityRate = float.Parse(nextSibling.Attributes.GetNamedItem("CloseAbilityRate").Value);
+                VeryCloseAbilityRate = float.Parse(nextSibling.Attributes.GetNamedItem("VeryCloseAbilityRate").Value);
 
-            RetainFeiziPersonalLoyalty = int.Parse(nextSibling.Attributes.GetNamedItem("RetainFeiziPersonalLoyalty").Value);
+                AIEncirclePlayerRate = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncirclePlayerRate").Value);
 
-            AIEncirclePlayerRate = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncirclePlayerRate").Value);
+                InternalSurplusFactor = int.Parse(nextSibling.Attributes.GetNamedItem("InternalSurplusFactor").Value);
+                AIExtraPerson = float.Parse(nextSibling.Attributes.GetNamedItem("AIExtraPerson").Value);
+                AIExtraPersonIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIExtraPersonIncreaseRate").Value);
 
-            InternalSurplusFactor = int.Parse(nextSibling.Attributes.GetNamedItem("InternalSurplusFactor").Value);
-            AIExtraPerson = float.Parse(nextSibling.Attributes.GetNamedItem("AIExtraPerson").Value);
-            AIExtraPersonIncreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("AIExtraPersonIncreaseRate").Value);
+                StaticMethods.LoadFromString(ExpandConditions, nextSibling.Attributes.GetNamedItem("ExpandConditions").Value);
 
-            StaticMethods.LoadFromString(ExpandConditions, nextSibling.Attributes.GetNamedItem("ExpandConditions").Value);
+                SearchPersonArchitectureCountPower = float.Parse(nextSibling.Attributes.GetNamedItem("SearchPersonArchitectureCountPower").Value);
+                AIEncircleRank = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncircleRank").Value);
+                AIEncircleVar = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncircleVar").Value);
 
-            SearchPersonArchitectureCountPower = float.Parse(nextSibling.Attributes.GetNamedItem("SearchPersonArchitectureCountPower").Value);
-            AIEncircleRank = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncircleRank").Value);
-            AIEncircleVar = int.Parse(nextSibling.Attributes.GetNamedItem("AIEncircleVar").Value);
+                RansomRate = float.Parse(nextSibling.Attributes.GetNamedItem("RansomRate").Value);
 
-            RansomRate = float.Parse(nextSibling.Attributes.GetNamedItem("RansomRate").Value);
-            InternalSurplusMinEffect = float.Parse(nextSibling.Attributes.GetNamedItem("InternalSurplusMinEffect").Value);
+                DayInTurn = int.Parse(nextSibling.Attributes.GetNamedItem("DayInTurn").Value);
+                MaxRelation = int.Parse(nextSibling.Attributes.GetNamedItem("MaxRelation").Value);
+                AIMaxFeizi = int.Parse(nextSibling.Attributes.GetNamedItem("AIMaxFeizi").Value);
 
-            DayInTurn = int.Parse(nextSibling.Attributes.GetNamedItem("DayInTurn").Value);
-            MaxRelation = int.Parse(nextSibling.Attributes.GetNamedItem("MaxRelation").Value);
-            AIMaxFeizi = int.Parse(nextSibling.Attributes.GetNamedItem("AIMaxFeizi").Value);
+                HougongRelationHateFactor = float.Parse(nextSibling.Attributes.GetNamedItem("HougongRelationHateFactor").Value);
+                MaxReputationForRecruit = int.Parse(nextSibling.Attributes.GetNamedItem("MaxReputationForRecruit").Value);
 
-            HougongRelationHateFactor = float.Parse(nextSibling.Attributes.GetNamedItem("HougongRelationHateFactor").Value);
-            MaxReputationForRecruit = int.Parse(nextSibling.Attributes.GetNamedItem("MaxReputationForRecruit").Value);
+                TroopMoraleChange = float.Parse(nextSibling.Attributes.GetNamedItem("TroopMoraleChange").Value);
+                RecruitPopualationDecreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("RecruitPopualationDecreaseRate").Value);
 
-            TroopMoraleChange = float.Parse(nextSibling.Attributes.GetNamedItem("TroopMoraleChange").Value);
-            RecruitPopualationDecreaseRate = float.Parse(nextSibling.Attributes.GetNamedItem("RecruitPopualationDecreaseRate").Value);
+                MakeMarriageCost = int.Parse(nextSibling.Attributes.GetNamedItem("MakeMarriageCost").Value);
+                NafeiCost = int.Parse(nextSibling.Attributes.GetNamedItem("NafeiCost").Value);
+                MakeMarrigeIdealLimit = int.Parse(nextSibling.Attributes.GetNamedItem("MakeMarrigeIdealLimit").Value);
+            }
 
-            MakeMarriageCost = int.Parse(nextSibling.Attributes.GetNamedItem("MakeMarriageCost").Value);
-            NafeiCost = int.Parse(nextSibling.Attributes.GetNamedItem("NafeiCost").Value);
+            else
+            {
+                document = new XmlDocument();
+                xml = Platform.Current.LoadText(str);
+                document.LoadXml(xml);
+                nextSibling = document.FirstChild.NextSibling;
+                for (int i = 0; i < nextSibling.Attributes.Count; i++)
+                {
+                    System.Reflection.FieldInfo[] 非getset字段表 = typeof(Parameters).GetFields((System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
+                    foreach (var v in 非getset字段表)
+                    {
+                        if (v.Name == nextSibling.Attributes[i].Name)
+                        {
+                            if (v.Name == "ExpandConditions")
+                            {
+                                List<int> listii = new List<int>();
+                                GameGlobal.StaticMethods.LoadFromString(listii, nextSibling.Attributes[i].Value.ToString());
+                                v.SetValue(Session.Current.Scenario.Parameters, listii);
+                            }
+                            if (v.FieldType.ToString() == "System.Int32")
+                            {
+                                string temp = nextSibling.Attributes[i].Value.ToString();
+                                if (temp.Contains("E"))
+                                {
+                                    Decimal de;
+                                    Decimal.TryParse(temp, System.Globalization.NumberStyles.Any, null, out de);
+                                    v.SetValue(Session.Current.Scenario.Parameters, (int)de);
+                                }
+                                else
+                                {
+                                    v.SetValue(Session.Current.Scenario.Parameters, int.Parse(nextSibling.Attributes[i].Value.ToString()));
+                                }
+                            }
+                            else if (v.FieldType.ToString() == "System.Single")
+                            {
+                                string temp = nextSibling.Attributes[i].Value.ToString();
+                                if (temp.Contains("E"))
+                                {
+                                    Decimal de;
+                                    Decimal.TryParse(temp, System.Globalization.NumberStyles.Any, null, out de);
+                                    v.SetValue(Session.Current.Scenario.Parameters, (float)de);
+                                }
+                                else
+                                {
+                                    v.SetValue(Session.Current.Scenario.Parameters, float.Parse(nextSibling.Attributes[i].Value.ToString()));
+                                }
+                            }
+                            else if (v.FieldType.ToString() == "System.Boolean")
+                            {
+                                v.SetValue(Session.Current.Scenario.Parameters, bool.Parse(nextSibling.Attributes[i].Value.ToString()));
+                            }
+                            else if (v.FieldType.ToString() == "System.String")
+                            {
+                                v.SetValue(Session.Current.Scenario.Parameters, nextSibling.Attributes[i].Value.ToString());
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void InitBaseRates()
@@ -608,16 +646,12 @@ namespace GameGlobal
             element.SetAttribute("RecruitmentDomination", RecruitmentDomination.ToString());
             element.SetAttribute("RecruitmentMorale", RecruitmentMorale.ToString());
             element.SetAttribute("ChangeCapitalCost", ChangeCapitalCost.ToString());
-            element.SetAttribute("HireNoFactionPersonCost", HireNoFactionPersonCost.ToString());
             element.SetAttribute("ConvincePersonCost", ConvincePersonCost.ToString());
             element.SetAttribute("RewardPersonCost", RewardPersonCost.ToString());
-            element.SetAttribute("SendSpyCost", SendSpyCost.ToString());
             element.SetAttribute("DestroyArchitectureCost", DestroyArchitectureCost.ToString());
             element.SetAttribute("InstigateArchitectureCost", InstigateArchitectureCost.ToString());
             element.SetAttribute("GossipArchitectureCost", GossipArchitectureCost.ToString());
             element.SetAttribute("JailBreakArchitectureCost", JailBreakArchitectureCost.ToString());
-            element.SetAttribute("ClearFieldFundCostUnit", ClearFieldFundCostUnit.ToString());
-            element.SetAttribute("ClearFieldAgricultureCostUnit", ClearFieldAgricultureCostUnit.ToString());
             element.SetAttribute("SurroundArchitectureDominationUnit", SurroundArchitectureDominationUnit.ToString());
             element.SetAttribute("FireDamageScale", FireDamageScale.ToString());
             element.SetAttribute("AIFundRate", AIFundRate.ToString());
@@ -684,9 +718,6 @@ namespace GameGlobal
             element.SetAttribute("AIAttackChanceIfUnfull", AIAttackChanceIfUnfull.ToString());
             element.SetAttribute("AIObeyStrategyTendencyChance", AIObeyStrategyTendencyChance.ToString());
             element.SetAttribute("AIOffendMaxDiplomaticRelationMultiply", AIOffendMaxDiplomaticRelationMultiply.ToString());
-            element.SetAttribute("AIOffendReserveAdd", AIOffendReserveAdd.ToString());
-            element.SetAttribute("AIOffendReserveBCDiffMultiply", AIOffendReserveBCDiffMultiply.ToString());
-            element.SetAttribute("AIOffendDefendingTroopRate", AIOffendDefendingTroopRate.ToString());
             element.SetAttribute("AIOffendDefendTroopAdd", AIOffendDefendTroopAdd.ToString());
             element.SetAttribute("AIOffendDefendTroopMultiply", AIOffendDefendTroopMultiply.ToString());
             element.SetAttribute("AIOffendIgnoreReserveProbAmbitionMultiply", AIOffendIgnoreReserveProbAmbitionMultiply.ToString());
@@ -710,7 +741,6 @@ namespace GameGlobal
             element.SetAttribute("AIAntiStratagemIncreaseRate", AIAntiStratagemIncreaseRate.ToString());
             element.SetAttribute("CloseAbilityRate", CloseAbilityRate.ToString());
             element.SetAttribute("VeryCloseAbilityRate", VeryCloseAbilityRate.ToString());
-            element.SetAttribute("RetainFeiziPersonalLoyalty", RetainFeiziPersonalLoyalty.ToString());
             element.SetAttribute("AIEncirclePlayerRate", AIEncirclePlayerRate.ToString());
             element.SetAttribute("InternalSurplusFactor", InternalSurplusFactor.ToString());
             element.SetAttribute("AIExtraPerson", AIExtraPerson.ToString());
@@ -725,7 +755,6 @@ namespace GameGlobal
             element.SetAttribute("AutoLearnSkillSuccessRate", AutoLearnSkillSuccessRate.ToString());
             element.SetAttribute("AutoLearnStuntSuccessRate", AutoLearnStuntSuccessRate.ToString());
             element.SetAttribute("RansomRate", RansomRate.ToString());
-            element.SetAttribute("InternalSurplusMinEffect", InternalSurplusMinEffect.ToString());
             element.SetAttribute("DayInTurn", DayInTurn.ToString());
             element.SetAttribute("MaxRelation", MaxRelation.ToString());
             element.SetAttribute("HougongRelationHateFactor", HougongRelationHateFactor.ToString());
@@ -735,6 +764,7 @@ namespace GameGlobal
             element.SetAttribute("RecruitPopualationDecreaseRate", RecruitPopualationDecreaseRate.ToString());
             element.SetAttribute("MakeMarriageCost", MakeMarriageCost.ToString());
             element.SetAttribute("NafeiCost", NafeiCost.ToString());
+            element.SetAttribute("MakeMarrigeIdealLimit", MakeMarrigeIdealLimit.ToString());
 
             document.AppendChild(element);
 
@@ -754,6 +784,10 @@ namespace GameGlobal
             if (TroopMoraleChange == 0)
             {
                 TroopMoraleChange = 1;
+            }
+            if (Session.Parameters.AIOffensiveCampaignRequiredScaleFactor == 0)
+            {
+                Session.Parameters.AIOffensiveCampaignRequiredScaleFactor = 1.0f;
             }
         }
     }

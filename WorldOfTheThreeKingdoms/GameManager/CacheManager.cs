@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Tools;
-
+using FontStashSharp;
 namespace GameManager
 {
     public class PlatformTexture
@@ -65,6 +65,15 @@ namespace GameManager
 
         public static Vector2 Scale = Vector2.One;
 
+        public static FontPair FontPair = new FontPair()
+        {
+            Name = @"Content\Font\FZLB_GBK.TTF",
+            Size = 30,
+            Style = "",
+            Width = 30,
+            Height = 32
+        };
+
         public static void Clear(CacheType type)
         {
             lock (CacheLock)
@@ -110,7 +119,7 @@ namespace GameManager
                         if (String.IsNullOrEmpty(rec.CacheType))
                         {
                             //這應該是用戶材質
-
+                            TextureDics.Remove(tex.Key);
                         }
                         //去除空或已經失效的材質
                         if (tex.Value == null || tex.Value.IsDisposed)
@@ -316,26 +325,32 @@ namespace GameManager
             Draw(name, pos, source, color, SpriteEffects.None, 1f);
         }
 
-        public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, SpriteEffects effect, float scale)
+        public static Bounds Draw(string name, Vector2 pos, Rectangle? source, Color color, SpriteEffects effect, float scale, float depth = 0f)
         {
             Texture2D tex = LoadTexture(name);
+
             if (tex != null && !tex.IsDisposed)
             {
-                Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, 0f);
+                Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, depth);
             }
+
+            if (source == null)
+                return new Bounds();
+            return new Bounds() { X = pos.X, Y = pos.Y, X2 = pos.X + source.Value.Width * scale, Y2 = pos.Y + source.Value.Height * scale };
         }
 
-        public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, SpriteEffects effect, Vector2 scale)
+        public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, SpriteEffects effect, Vector2 scale, float depth = 0f)
         {
             Texture2D tex = LoadTexture(name);
             if (tex != null && !tex.IsDisposed)
             {
-                Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, 0f);
+                Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, depth);
             }
             else
             {
 
             }
+
         }
 
         public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, float rotation, SpriteEffects effect, Vector2 scale)
@@ -358,7 +373,16 @@ namespace GameManager
                 }
             }
         }
-        
+
+        public static void Draw(string text, Rectangle rec, Rectangle? source, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
+        {
+            var texture = new PlatformTexture()
+            {
+                Name = text
+            };
+            Draw(texture, rec, source, color, rotation, origin, effect, depth);
+        }
+
 
         public static void Draw(PlatformTexture platformTexture, Rectangle rec, Rectangle? source, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
         {
@@ -448,7 +472,7 @@ namespace GameManager
                     if (Scale != Vector2.One)
                     {
                         pos = new Rectangle(Convert.ToInt16(pos.X * Scale.X), Convert.ToInt16(pos.Y * Scale.Y), Convert.ToInt16(pos.Width * Scale.X), Convert.ToInt16(pos.Height * Scale.Y));
-                    }                    
+                    }
                     Session.Current.SpriteBatch.Draw(tex, pos, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
                 }
             }
@@ -489,23 +513,39 @@ namespace GameManager
                 type = "";
             }
 
-            string id = String.Format(@"Content\Textures\GameComponents\PersonPortrait\Images\Player\{0}{1}.jpg", Convert.ToInt32(pictureIndex), type);
+            string id = String.Format("Content/Textures/GameComponents/PersonPortrait/Images/Player/{0}{1}.jpg", Convert.ToInt32(pictureIndex), type);
+            if (!(Setting.Current == null || String.IsNullOrEmpty(Setting.Current.MODRuntime)))
+            {
+                id = id.Replace("Content", "MODs/" + Setting.Current.MODRuntime);
+            }
 
             if (Platform.Current.FileExists(id))
             {
-                
+
             }
             else
             {
-                id = String.Format(@"Content\Textures\GameComponents\PersonPortrait\Images\Default\{0}{1}.jpg", Convert.ToInt32(pictureIndex), type);
+                id = String.Format(@"Content/Textures/GameComponents/PersonPortrait/Images/Default/{0}{1}.jpg", Convert.ToInt32(pictureIndex), type);
+                if (!(Setting.Current == null || String.IsNullOrEmpty(Setting.Current.MODRuntime)))
+                {
+                    id = id.Replace("Content", "MODs/" + Setting.Current.MODRuntime);
+                }
 
                 if (Platform.Current.FileExists(id))
                 {
-                        
+
                 }
                 else
                 {
-                    id = String.Format(@"Content\Textures\GameComponents\PersonPortrait\Images\Default\{0}{1}.jpg", fallbackIndex, "");
+                    id = String.Format(@"Content/Textures/GameComponents/PersonPortrait/Images/Default/{0}{1}.jpg", Convert.ToInt32(pictureIndex), "");
+                    if (Platform.Current.FileExists(id))
+                    {
+
+                    }
+                    else
+                    {
+                        id = String.Format(@"Content/Textures/GameComponents/PersonPortrait/Images/Default/{0}{1}.jpg", fallbackIndex, "");
+                    }
                 }
             }
 
@@ -558,21 +598,111 @@ namespace GameManager
 
         public static void DrawString(SpriteFont font, string text, Vector2 pos, Color color, bool checkTradition = false, bool upload = false)
         {
-            if (font != null && !String.IsNullOrEmpty(text))
+            if (!String.IsNullOrEmpty(text))
             {
                 text = CheckTextCache(font, text, checkTradition, upload);
-                Session.Current.SpriteBatch.DrawString(font, text, pos, color);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos, color);
+
+                TextManager.DrawTexts(text, FontPair, pos, color);
             }
         }
 
         public static void DrawString(SpriteFont font, string text, Vector2 pos, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, bool checkTradition = false, bool upload = false)
         {
-            if (font != null && !String.IsNullOrEmpty(text))
+            if (!String.IsNullOrEmpty(text))
             {
                 text = CheckTextCache(font, text, checkTradition, upload);
-                Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
+
+                TextManager.DrawTexts(text, FontPair, pos, color, 0, scale, layerDepth);
             }
         }
+        
+        /// <summary>
+        /// 画文字并返回文字范围的矩形列表（支持多行文字）
+        /// </summary>
+        /// <param name="font"></param>
+        /// <param name="text"></param>
+        /// <param name="pos"></param>
+        /// <param name="color"></param>
+        /// <param name="rotation"></param>
+        /// <param name="origin"></param>
+        /// <param name="scale"></param>
+        /// <param name="effects"></param>
+        /// <param name="layerDepth"></param>
+        /// <param name="checkTradition"></param>
+        /// <param name="upload"></param>
+        /// <returns>返回文字范围的矩形列表</returns>
+        public static List<Bounds> DrawStringReturnBounds(SpriteFont font, string text, Vector2 pos, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, bool checkTradition = false, bool upload = false)
+        {
+            List<Bounds> bounds = new List<Bounds>();
+            if (!String.IsNullOrEmpty(text))
+            {
+                text = CheckTextCache(font, text, checkTradition, upload);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
 
+                bounds = TextManager.DrawTextsReturnBounds(text, FontPair, pos, color, 0, scale, layerDepth);
+            }
+            return bounds;
+        }
+
+        public static List<Bounds> DrawStringReturnBounds(SpriteBatch batch,SpriteFont font, string text, Vector2 pos, Color color, float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth, bool checkTradition = false, bool upload = false)
+        {
+            List<Bounds> bounds = new List<Bounds>();
+            if (!String.IsNullOrEmpty(text))
+            {
+                text = CheckTextCache(font, text, checkTradition, upload);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
+
+                bounds = TextManager.DrawTextsReturnBounds(batch, text, FontPair, pos, color, 0, scale, layerDepth);
+            }
+            return bounds;
+        }
+
+        /// <summary>
+        /// 计算文字的边界范围
+        /// </summary>
+        /// <param name="font"></param>
+        /// <param name="text"></param>
+        /// <param name="pos"></param>
+        /// <param name="scale"></param>
+        /// <param name="checkTradition"></param>
+        /// <param name="upload"></param>
+        /// <returns></returns>
+        public static List<Bounds> CalculateTextBounds(SpriteFont font, string text, Vector2 pos, float scale,  bool checkTradition = false, bool upload = false)
+        {
+            List<Bounds> bounds = new List<Bounds>();
+            if (!String.IsNullOrEmpty(text))
+            {
+                text = CheckTextCache(font, text, checkTradition, upload);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
+
+                bounds = TextManager.CalcTextsBounds(text, FontPair, pos, 0, scale);
+            }
+            return bounds;
+        }
+
+        /// <summary>
+        /// 将文字处理成自动换行
+        /// </summary>
+        /// <param name="font">字体</param>
+        /// <param name="text">要处理的文字</param>
+        /// <param name="lineWidth">行宽度</param>
+        /// <param name="scale">缩放倍数</param>
+        /// <param name="checkTradition"></param>
+        /// <param name="upload"></param>
+        /// <returns>返回经过自动换行处理过的文字</returns>
+        public static string AutoWrap(SpriteFont font,string text,float lineWidth,float scale, bool checkTradition = false, bool upload = false)
+        {
+            if (!String.IsNullOrEmpty(text))
+            {
+                text = CheckTextCache(font, text, checkTradition, upload);
+                //Session.Current.SpriteBatch.DrawString(font, text, pos * Scale, color, rotation, origin, scale * Scale, effects, layerDepth);
+
+                return TextManager.HandleAutoWrap(text, FontPair, lineWidth, scale);
+            }
+
+            return null;
+        }
     }
 }

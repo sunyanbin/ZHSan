@@ -90,10 +90,6 @@ namespace GameObjects
 
         public static Captive Create(Person person, Faction capturingFaction)
         {
-            if (person.BelongedFaction == null)
-            {
-                return null;
-            }
             if (person.BelongedFaction == capturingFaction)
             {
                 return null;
@@ -435,7 +431,7 @@ namespace GameObjects
                 {
                     if (this.CaptivePerson.ArrivingDays > 0)
                     {
-                        return (this.CaptivePerson.ArrivingDays + "天");
+                        return (this.CaptivePerson.ArrivingDays * Session.Current.Scenario.Parameters.DayInTurn + "天");
                     }
                     
                 }
@@ -452,7 +448,7 @@ namespace GameObjects
                 {
                     if (this.RansomArriveDays > 0)
                     {
-                        return (this.RansomArriveDays * Session.Parameters.DayInTurn + "天");
+                        return (this.RansomArriveDays + "天");
                     }
                 }
                 return "----";

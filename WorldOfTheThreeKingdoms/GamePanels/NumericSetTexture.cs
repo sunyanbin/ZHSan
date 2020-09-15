@@ -33,12 +33,12 @@ namespace GamePanels
         public bool IsModeS = false;
 
         public bool Enable = true;
-        
+
         int groundTextureWidth, groundTextureHeight, fillTextureWidth, fillTextureHeight;
 
         public NumericSetTexture(int minNumber, int maxNumber, int allowNumber, int? nowNumber, Vector2 position, bool isModeS)
         {
-            MinNumber = minNumber; MaxNumber = maxNumber; AllowNumber = allowNumber; NowNumber = nowNumber; 
+            MinNumber = minNumber; MaxNumber = maxNumber; AllowNumber = allowNumber; NowNumber = nowNumber;
             Position = position;
             Unit = 10;
             IsModeS = isModeS;
@@ -99,7 +99,7 @@ namespace GamePanels
                 }
                 if (IsInTexture(poX, poY, leftTexture.Position + new Vector2(leftTexture.Width + (IsModeS ? 2 : 10), 0f) + (basePosition == null ? Vector2.Zero : (Vector2)basePosition), groundTextureWidth, groundTextureHeight))
                 {
-                    int width = poX - Convert.ToInt32(leftTexture.Position.X) - leftTexture.Width - 1 - (basePosition == null ? 0 : (int)((Vector2)basePosition).X);
+                    int width =Convert.ToInt32(poX - Convert.ToInt32(leftTexture.Position.X) - leftTexture.Width - 1 - (basePosition == null ? 0 : (int)((Vector2)basePosition).X));
                     int value = ((width * MaxNumber / groundTextureWidth) / Unit) * Unit;
                     if (value < AllowNumber && value < MaxNumber) NowNumber = value;
                     else NowNumber = AllowNumber <= MaxNumber ? AllowNumber : MaxNumber;
@@ -144,7 +144,7 @@ namespace GamePanels
             if (MaxNumber != 0) width = (int)NowNumber * fillTextureWidth / MaxNumber;
             else width = 0;
 
-            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Fill" : @"Content\Textures\Resources\Start\NumberSet-Fill", new Vector2(Convert.ToInt32(pos.X + basePosition.X) + 2, Convert.ToInt32(pos.Y + basePosition.Y) + 2), new Rectangle(0, 0, width, fillTextureHeight), Color.Orange * alpha);
+            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Fill" : @"Content\Textures\Resources\Start\NumberSet-Fill", new Vector2(Convert.ToInt32(pos.X + basePosition.X) + 2, Convert.ToInt32(pos.Y + basePosition.Y) + 3), new Rectangle(0, 0, width, fillTextureHeight - 3), Color.Orange * alpha);
 
             rightTexture.Draw(basePosition, Color.White * alpha);
             leftTexture.Draw(basePosition, Color.White * alpha);
@@ -192,7 +192,8 @@ namespace GamePanels
         public bool IsModeS = false;
 
         public bool Enable = true;
-
+        public int Heightchange = 0;
+        public int Widthchange = 0;
         int groundTextureWidth, groundTextureHeight, fillTextureWidth, fillTextureHeight;
 
         public NumericSetTextureF(float minNumber, float maxNumber, float allowNumber, float? nowNumber, Vector2 position, bool isModeS)
@@ -203,15 +204,15 @@ namespace GamePanels
             IsModeS = isModeS;
             if (IsModeS)
             {
-                groundTextureWidth = 147; groundTextureHeight = 32;
-                fillTextureWidth = 145; fillTextureHeight = 28;
+                groundTextureWidth = 147 + Widthchange; groundTextureHeight = 32 + Heightchange;
+                fillTextureWidth = 143 + Widthchange; fillTextureHeight = 32 + Heightchange;
                 leftTexture = new ButtonTexture(@"Content\Textures\Resources\Start\NumberSetS", "Minus", null) { Enable = Enable };
                 rightTexture = new ButtonTexture(@"Content\Textures\Resources\Start\NumberSetS", "Plus", null) { Enable = Enable };
             }
             else
             {
-                groundTextureWidth = 226; groundTextureHeight = 48;
-                fillTextureWidth = 216; fillTextureHeight = 38;
+                groundTextureWidth = 226 + Widthchange; groundTextureHeight = 48 + Heightchange;
+                fillTextureWidth = 216 + Widthchange; fillTextureHeight = 38 + Heightchange;
                 leftTexture = new ButtonTexture(@"Content\Textures\Resources\Start\NumberSet", "Minus", null) { Enable = Enable };
                 rightTexture = new ButtonTexture(@"Content\Textures\Resources\Start\NumberSet", "Plus", null) { Enable = Enable };
             }
@@ -243,7 +244,7 @@ namespace GamePanels
         {
             if (!Enable) return;
             leftTexture.MouseOver = leftTexture.IsInTexture(poX, poY, basePosition);
-            rightTexture.MouseOver = rightTexture.IsInTexture(poX, poY, basePosition);
+            rightTexture.MouseOver = rightTexture.IsInTexture(poX, poY, new Vector2(basePosition.Value.X + Widthchange, basePosition.Value.Y + Heightchange));
             if (InputManager.IsPressed)
             {
                 if (leftTexture.MouseOver)
@@ -256,10 +257,10 @@ namespace GamePanels
                     clickTimes++;
                     if (NowNumber < AllowNumber && NowNumber < MaxNumber && clickTimes >= 1) { NowNumber += Unit; clickTimes = 0; }
                 }
-                if (IsInTexture(poX, poY, leftTexture.Position + new Vector2(leftTexture.Width + (IsModeS ? 2 : 10), 0f) + (basePosition == null ? Vector2.Zero : (Vector2)basePosition), groundTextureWidth, groundTextureHeight))
+                if (IsInTexture(poX, poY, leftTexture.Position + new Vector2(leftTexture.Width + (IsModeS ? 2 : 10), 0f) + (basePosition == null ? Vector2.Zero : (Vector2)basePosition), groundTextureWidth + Widthchange, groundTextureHeight + Heightchange))
                 {
-                    int width = poX - Convert.ToInt32(leftTexture.Position.X) - leftTexture.Width - 1 - (basePosition == null ? 0 : (int)((Vector2)basePosition).X);
-                    float value = ((width * MaxNumber / groundTextureWidth) / Unit) * Unit;
+                    int width = Convert.ToInt32(poX - Convert.ToInt32(leftTexture.Position.X) - leftTexture.Width - 1 - (basePosition == null ? 0 : (int)((Vector2)basePosition).X));
+                    float value = ((width * MaxNumber / (groundTextureWidth + Widthchange)) / Unit) * Unit;
                     if (value < AllowNumber && value < MaxNumber) NowNumber = value;
                     else NowNumber = AllowNumber <= MaxNumber ? AllowNumber : MaxNumber;
                 }
@@ -272,10 +273,10 @@ namespace GamePanels
             {
                 NowNumber = MinNumber;
             }
-            
+
             if (IntMode)
             {
-                nowNumber = NowNumber == null ? 0 : (int)NowNumber;                
+                nowNumber = NowNumber == null ? 0 : (int)NowNumber;
             }
             else
             {
@@ -316,26 +317,27 @@ namespace GamePanels
         public void Draw(Vector2 basePosition, float alpha)
         {
             Vector2 pos = Position + new Vector2(leftTexture.Width + (IsModeS ? 2 : 10), 0);
-            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Bottom" : @"Content\Textures\Resources\Start\NumberSet-Bottom", pos + basePosition, Color.White * alpha);
+            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Bottom" : @"Content\Textures\Resources\Start\NumberSet-Bottom", new Rectangle(Convert.ToInt32(pos.X + basePosition.X), Convert.ToInt32(pos.Y + basePosition.Y), groundTextureWidth + Widthchange, groundTextureHeight + Heightchange),null, Color.White * alpha, 0f, Vector2.Zero, SpriteEffects.None, 0f);
             if (NowNumber == null) NowNumber = 0;
             int width = 0;
-            if (MaxNumber != 0) width = Convert.ToInt32(NowNumber * fillTextureWidth / MaxNumber);
+            if (MaxNumber != 0) width = Convert.ToInt32(NowNumber * (groundTextureWidth + Widthchange) / MaxNumber);
             else width = 0;
 
-            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Fill" : @"Content\Textures\Resources\Start\NumberSet-Fill", new Vector2(Convert.ToInt32(pos.X + basePosition.X) + 2, Convert.ToInt32(pos.Y + basePosition.Y) + 2), new Rectangle(0, 0, width, fillTextureHeight), Color.Orange * alpha);
+            //CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Fill" : @"Content\Textures\Resources\Start\NumberSet-Fill", new Vector2(Convert.ToInt32(pos.X + basePosition.X) + 2, Convert.ToInt32(pos.Y + basePosition.Y) + 3), new Rectangle(0, 0, width, fillTextureHeight + Heightchange - 3), Color.Orange * alpha);
+            CacheManager.Draw(IsModeS ? @"Content\Textures\Resources\Start\NumberSetS-Fill" : @"Content\Textures\Resources\Start\NumberSet-Fill", new Rectangle(Convert.ToInt32(pos.X + basePosition.X) + 2, Convert.ToInt32(pos.Y + basePosition.Y), width - 4, fillTextureHeight + Heightchange), null, Color.White * alpha,0f,Vector2.Zero,SpriteEffects.None,0f);
 
-            rightTexture.Draw(basePosition, Color.White * alpha);
+            rightTexture.Draw(new Vector2(basePosition.X + Widthchange, basePosition.Y), Color.White * alpha);
             leftTexture.Draw(basePosition, Color.White * alpha);
 
             if (DisNumber)
             {
                 CacheManager.DrawString(Session.Current.Font, MinNumber.ToString(), leftTexture.Position + basePosition + new Vector2(0, 50), NumColor * alpha);
                 CacheManager.DrawString(Session.Current.Font, NowNumber.ToString(), leftTexture.Position + basePosition + new Vector2(64, 50), NumColor * alpha);
-                CacheManager.DrawString(Session.Current.Font, MaxNumber.ToString(), leftTexture.Position + basePosition + new Vector2(64 + groundTextureWidth, 50), NumColor * alpha);
+                CacheManager.DrawString(Session.Current.Font, MaxNumber.ToString(), leftTexture.Position + basePosition + new Vector2(64 + groundTextureWidth + Widthchange, 50), NumColor * alpha);
             }
             else
             {
-                CacheManager.DrawString(Session.Current.Font, DisNumberText ? ViewText + NowNumber.ToString() : NowNumber.ToString(), leftTexture.Position + basePosition + (IsModeS ? new Vector2(55, 3) : new Vector2(156, 8)), Color.Black * alpha);
+                CacheManager.DrawString(Session.Current.Font, DisNumberText ? ViewText + NowNumber.ToString() : NowNumber.ToString(),new Vector2(( leftTexture.Position + basePosition + (IsModeS ? new Vector2(55, 3) : new Vector2(156, 8))).X, (leftTexture.Position + basePosition + (IsModeS ? new Vector2(55, 3) : new Vector2(156, 8))).Y+Heightchange), Color.White * alpha,0f,Vector2.Zero,((float)leftTexture.Height+Heightchange)/leftTexture.Height,SpriteEffects.None,0f);
             }
         }
 

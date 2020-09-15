@@ -126,21 +126,7 @@ namespace GameObjects.PersonDetail
                 generationChance = value;
             }
         }
-        [DataMember]
-        public int RelatedAbility { get; set; }//目前官方的此值默认为空，默认为0
 
-        public int GetRelatedAbility(Person p)
-        {
-            switch (RelatedAbility)
-            {
-                case 0: return p.Strength;
-                case 1: return p.Command;
-                case 2: return p.Intelligence;
-                case 3: return p.Politics;
-                case 4: return p.Glamour;
-            }
-            return 0;
-        }
         [DataMember]
         public int MapLimit
         {
@@ -261,24 +247,9 @@ namespace GameObjects.PersonDetail
         {
             if (AutoLearn > 0 && !ignoreAutoLearn) return false;
             if (this.ManualAward && !ignoreAutoLearn) return false;
-            foreach (Condition condition in this.Conditions.Conditions.Values)
-            {
-                if (!condition.CheckCondition(person))
-                {
-                    return false;
-                }
-            }
-            foreach (Condition condition in this.ArchitectureConditions.Conditions.Values)
-            {
-                if (person.LocationArchitecture == null) return false;
-                if (!condition.CheckCondition(person.LocationArchitecture)) return false;
-            }
-            foreach (Condition condition in this.FactionConditions.Conditions.Values)
-            {
-                if (person.BelongedFaction == null) return false;
-                if (!condition.CheckCondition(person.BelongedFaction)) return false;
-            }
-           
+            if (!Condition.CheckConditionList(this.Conditions.Conditions.Values, person)) return false;
+            if (!Condition.CheckConditionList(this.ArchitectureConditions.Conditions.Values, person.LocationArchitecture)) return false;
+            if (!Condition.CheckConditionList(this.FactionConditions.Conditions.Values, person.BelongedFaction)) return false;
             return CheckLimit(person);
         }
 

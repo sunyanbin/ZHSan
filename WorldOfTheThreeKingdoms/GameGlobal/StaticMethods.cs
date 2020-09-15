@@ -1,4 +1,5 @@
 ﻿using GameManager;
+using MersenneTwister;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -40,13 +41,14 @@ namespace GameGlobal
 
         public Vector2 GetWidthHeight(string text)
         {
+            //return TextManager.GetWidthHeight(text, CacheManager.FontPair, 1f);
             float width = 0f;
 
             float scale = (Size == 0f ? 14 : Size) / 20;
 
             var chars = text.ToCharArray();
 
-            foreach(char ch in chars)
+            foreach (char ch in chars)
             {
                 width += (ch > 128 ? 28 : 14);
             }
@@ -63,7 +65,7 @@ namespace GameGlobal
 
     public class StaticMethods
     {
-        public static System.Random RandomDigit = new System.Random();
+        public static Random RandomDigit = Randoms.Create();
 
         public static void AdjustRectangleInViewport(ref Microsoft.Xna.Framework.Rectangle rect)
         {
@@ -371,7 +373,7 @@ namespace GameGlobal
             return null;
         }
 
-        public static void LoadFromString(int[] intArray, string dataString)
+        public static void LoadFromString(out int[] intArray, string dataString)
         {
             char[] separator = new char[] { ' ', '\n', '\r', '\t' };
             string[] strArray = dataString.Split(separator, StringSplitOptions.RemoveEmptyEntries);
@@ -420,9 +422,12 @@ namespace GameGlobal
             char[] separator = new char[] { ' ', '\n', '\r', '\t' };
             string[] strArray = dataString.Split(separator, StringSplitOptions.RemoveEmptyEntries);
             list.Clear();
-            for (int i = 0; i < strArray.Length; i += 2)
+            if(strArray.Length>=2)
             {
-                list.Add(int.Parse(strArray[i]), int.Parse(strArray[i + 1]));
+                for (int i = 0; i < strArray.Length; i += 2)
+                {
+                    list.Add(int.Parse(strArray[i]), int.Parse(strArray[i + 1]));
+                }
             }
         }
 
@@ -458,7 +463,10 @@ namespace GameGlobal
             return RandomDigit.Next(maxValue);
         }
 
-
+        public static double Random()
+        {
+            return RandomDigit.NextDouble();
+        }
 
         public static bool RectangleInViewport(Microsoft.Xna.Framework.Rectangle rect, Microsoft.Xna.Framework.Point viewportSize)
         {
@@ -551,6 +559,42 @@ namespace GameGlobal
                 builder.Append(num.Key.ToString() + " " + num.Value.ToString() + " ");
             }
             return builder.ToString();
+        }
+
+        public static string SaveToString(List<KeyValuePair<int, int>> List)
+        {
+            if (List == null)
+            {
+                return "";
+            }
+            StringBuilder builder = new StringBuilder();
+            foreach (KeyValuePair<int, int> num in List)
+            {
+                builder.Append(num.Key.ToString() + " " + num.Value.ToString() + " ");
+            }
+            return builder.ToString();
+        }
+        public static void LoadFromString(List<KeyValuePair<int, int>> list, string dataString)
+        {
+            char[] separator = new char[] { ' ', '\n', '\r', '\t' };
+            string[] strArray = dataString.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            list.Clear();
+            for (int i = 0; i < strArray.Length; i += 2)
+            {
+                list.Add(new KeyValuePair<int, int>(int.Parse(strArray[i]), int.Parse(strArray[i + 1])));
+            }
+        }
+        public static GameObjects.zainanlei LoadzainanfromString(string zainanstring)
+        {
+            char[] separator = new char[] { ' ', '\n', '\r', '\t' };
+            string[] strArray = zainanstring.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+            GameObjects.zainanlei zainan = new GameObjects.zainanlei();
+            for (int i = 0; i < strArray.Length; i += 2)
+            {
+                zainan.zainanleixing = int.Parse(strArray[i]);
+                zainan.shengyutianshu = int.Parse(strArray[i + 1]);
+            }
+            return zainan;
         }
     }
 }

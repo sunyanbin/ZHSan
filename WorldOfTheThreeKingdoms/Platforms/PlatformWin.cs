@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
@@ -29,6 +29,7 @@ using Microsoft.Xna.Framework.Input;
 using Tools;
 using WorldOfTheThreeKingdoms;
 using GameManager;
+using WorldOfTheThreeKingdoms.GameScreens;
 
 namespace Platforms
 {
@@ -40,10 +41,10 @@ namespace Platforms
         public static new PlatFormType PlatFormType = PlatFormType.Win;
 
         public static new bool IsMobilePlatForm = false;
-                
+
         public new string PreferFullMode = "Window";
 
-        public static new string PreferResolution = "1280*720";
+        public static new string PreferResolution = "1368*768";
 
         public new bool DebugMode = true;
         public new bool ProcessGameData = true;
@@ -164,14 +165,13 @@ namespace Platforms
             MainGame.Window.AllowUserResizing = true;
 
             Form xnaWindow = (Form)Control.FromHandle((MainGame.Window.Handle));
-            if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
-            {
-                xnaWindow.MaximizeBox = false;//关闭最大化和双击标题栏最大化功能
-            }
+
             xnaWindow.MouseWheel += (sender, e) =>
             {
                 InputManager.PinchMove = Convert.ToSingle(e.Delta) / 480;
             };
+
+            xnaWindow.WindowState = FormWindowState.Maximized;
 
             //Mouse.WindowHandle = xnaWindow.Handle; // Game1.Window.Handle;  // Season.m_RenderControl.FindForm().Handle
         }
@@ -227,7 +227,7 @@ namespace Platforms
         {
             get
             {
-                return AppDomain.CurrentDomain.BaseDirectory.Replace(@"WorldOfTheThreeKingdoms\bin\Win\", "");                
+                return AppDomain.CurrentDomain.BaseDirectory.Split(new string[] { "WorldOfTheThreeKingdoms" }, StringSplitOptions.None)[0];  //.Replace(@"WorldOfTheThreeKingdoms\bin\Win\", "");                
             }
         }
 
@@ -310,7 +310,7 @@ namespace Platforms
                 return ApplicationUrl + "WorldOfTheThreeKingdoms.exe";
             }
         }
-
+        public bool editing = false;
         #region 加載資源文件
         /// <summary>
         /// 加載資源文本
@@ -320,6 +320,12 @@ namespace Platforms
         public string LoadText(string res)
         {
             res = res.Replace("\\", "/");
+            if (!editing)
+            {
+                res = base.GetMODFile(res);
+            }
+
+
             lock (Platform.IoLock)
             {
                 return File.ReadAllText(res);
@@ -333,6 +339,9 @@ namespace Platforms
         public string[] LoadTexts(string res)
         {
             res = res.Replace("\\", "/");
+
+            res = base.GetMODFile(res);
+
             lock (Platform.IoLock)
             {
                 return File.ReadAllLines(res);
@@ -346,6 +355,9 @@ namespace Platforms
         public byte[] LoadFile(string res)
         {
             res = res.Replace("\\", "/");
+
+            res = base.GetMODFile(res);
+
             using (var dest = new MemoryStream())
             {
                 lock (Platform.IoLock)
@@ -361,9 +373,39 @@ namespace Platforms
 
         #region 處理文件夾事宜
 
-        public override string[] GetFiles(string dir)
+
+        public override string[] GetDirectories(string dir, bool all, bool full)
         {
-            return Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories);
+            if (Directory.Exists(dir))
+            {
+                return Directory.GetDirectories(dir, "*.*", all ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public override string[] GetDirectoriesBasic(string dir, bool all, bool full)
+        {
+            return GetDirectories(dir, all, true);
+        }
+
+        public override string[] GetFiles(string dir, bool all = false)
+        {
+            if (DirectoryExists(dir))
+            {
+                return Directory.GetFiles(dir, "*.*", all ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public override string[] GetFilesBasic(string dir, bool all = false)
+        {
+            return GetFiles(dir, false);
         }
 
         public override string ReadAllText(string file)
@@ -474,23 +516,26 @@ namespace Platforms
                 }
                 else
                 {
-
+                    res = base.GetMODFile(res);
                 }
 
                 lock (Platform.IoLock)
                 {
+
                     using (var stream = isUser ? LoadUserFileStream(res) : TitleContainer.OpenStream(res))
                     {
                         Texture2D tex = Texture2D.FromStream(Platform.GraphicsDevice, stream);
-                        //if (tex != null && Path.GetExtension(res).ToLower() == ".png")
+                        //貌似在Win7下，這個算法出錯，只能預先處理好材質了再載入了
+                        //if (MainMenuScreen.Current.btnTextureAlpha.Selected &&
+                        //    tex != null && Path.GetExtension(res).ToLower() == ".png" && !res.Contains("Cloud"))
                         //{
                         //    try
                         //    {
-                        //        Season.Current.PreMultiplyAlphas(tex);
+                        //        GameTools.PreMultiplyAlphas(tex);
                         //    }
                         //    catch (Exception ex)
                         //    {
-                        //        WebTools.TakeWarnMsg("处理透明层级失败:" + res, "PreMultiplyAlphas:" + UserApplicationDataPath + res, ex);
+                        //        //WebTools.TakeWarnMsg("处理透明层级失败:" + res, "PreMultiplyAlphas:" + UserApplicationDataPath + res, ex);
                         //    }
                         //}
                         return tex;
@@ -1168,7 +1213,7 @@ namespace Platforms
                 string[] str = new string[] { ".jpeg", ".jpg", ".png", ".gif", ".bmp" };
                 if (!str.Contains(extension.ToLower()))
                 {
-                    MessageBox.Show("仅能上传jpg,png,gif,bmp格式的图片！");
+                    System.Windows.Forms.MessageBox.Show("仅能上传jpg,png,gif,bmp格式的图片！");
                 }
                 else
                 {
@@ -1176,7 +1221,7 @@ namespace Platforms
                     FileInfo fileInfo = new FileInfo(fileDialog.FileName);
                     if (fileInfo.Length > 5000 * 1024)
                     {
-                        MessageBox.Show("上传的图片不能大于5000K");
+                        System.Windows.Forms.MessageBox.Show("上传的图片不能大于5000K");
                     }
                     else
                     {

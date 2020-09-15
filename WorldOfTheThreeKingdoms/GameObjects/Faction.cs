@@ -264,9 +264,7 @@ namespace GameObjects
         public string SectionsString { get; set; }
 
         public SectionList Sections = new SectionList();
-        [DataMember]
-        public Dictionary<Point, object> SpyMessageCloseList = new Dictionary<Point, object>();
-       
+
         public bool StopToControl;
 
         public MilitaryKindTable TechniqueMilitaryKinds = new MilitaryKindTable();
@@ -691,7 +689,7 @@ namespace GameObjects
                     this.AddKnownAreaData(point, InformationLevel.高);
                 }
             }
-            if (a.Kind.HasLongView)
+            if (a.Kind != null && a.Kind.HasLongView)
             {
                 foreach (Point point in a.LongViewArea.Area)
                 {
@@ -905,9 +903,12 @@ namespace GameObjects
    
             Person hater = WillHateLeaderDueToAffair(p, this.Leader, p.suoshurenwuList.GetList(), false);
 
-            if (this.IsAlien && (hater == null ||  hater.PersonalLoyalty >= 2))
+            if (this.IsAlien && (hater == null || hater.PersonalLoyalty >= 2))
             {
-                return true;
+                if (hater == null || hater.BelongedFaction != this)
+                {
+                    return true;
+                }
             }
 
             if (hater != null)
@@ -1040,7 +1041,7 @@ namespace GameObjects
 
             if (GameObject.Random(10) == 0)
             {
-                if (leader.Spouse != null && leader.WaitForFeiZi != null && leader.Age < 40)
+                if (leader.Spouse != null && leader.WaitForFeiZi != null && leader.Age < 40 && leader.Status == PersonStatus.Normal)
                 {
                     PersonList leaderMarryable = this.Leader.MakeMarryableInFaction();
                     if (leaderMarryable.Count > 0)
@@ -1059,7 +1060,7 @@ namespace GameObjects
                                 simulatSuoshu.AddRange(q.suoshurenwuList.GetList());
                                 simulatSuoshu.Add(q);
 
-                                Person hater = WillHateLeaderDueToAffair(p, q, simulatSuoshu, true);
+                                Person hater = WillHateLeaderDueToAffair(p, q, simulatSuoshu, false);
                                 if (hater != null && hater != p && hater != q) continue;
 
                                 AIActuallyMakeMarriage(p, q);
@@ -1078,6 +1079,7 @@ namespace GameObjects
                 {
                     if (p.WaitForFeiZi != null) continue;
                     if (p.Spouse != null) continue;
+                    if (p.Status != PersonStatus.Normal) continue;
                     PersonList allCandidates = p.MakeMarryableInFaction();
                     PersonList candidates = new PersonList();
                     foreach (Person q in allCandidates)
@@ -1102,8 +1104,8 @@ namespace GameObjects
                             simulatSuoshu.AddRange(q.suoshurenwuList.GetList());
                             simulatSuoshu.Add(q);
 
-                            Person hater = WillHateLeaderDueToAffair(p, q, simulatSuoshu, true);
-                            if (hater != null && hater != p && hater != q) continue;
+                            Person hater = WillHateLeaderDueToAffair(p, q, simulatSuoshu, false);
+                            if (hater != null) continue;
 
                             AIActuallyMakeMarriage(p, q);
                             break;
@@ -1675,9 +1677,12 @@ namespace GameObjects
             {
                 if (a.Abandoned)
                 {
-                    a.WithdrawResources();
-                    a.WithdrawMilitaries();
                     a.WithdrawPerson();
+                    a.WithdrawMilitaries();
+                }
+                if (a.HasHostileTroopsInView())
+                {
+                    a.WithdrawResources();
                 }
             }
         }
@@ -3560,19 +3565,16 @@ namespace GameObjects
 
         private void AIAppointMayor()
         {
-            if (GameObject.Random(10) == 0)
+            foreach (Architecture a in this.Architectures)
             {
-                foreach (Architecture a in this.Architectures)
+                if (!Session.Current.Scenario.IsPlayer(this) || a.BelongedSection.AIDetail.AutoRun)
                 {
-                    if (!Session.Current.Scenario.IsPlayer(this) || a.BelongedSection.AIDetail.AutoRun)
+                    if (a.AppointMayorAvail())
                     {
-                        if (a.AppointMayorAvail())
-                        {
-                            Person person = a.AIMayorCandicate[0] as Person;
-                            a.MayorID = person.ID;
-                            a.AppointMayor(person);
-                            a.MayorOnDutyDays = 0;
-                        }
+                        Person person = a.AIMayorCandicate[0] as Person;
+                        a.MayorID = person.ID;
+                        a.AppointMayor(person);
+                        a.MayorOnDutyDays = 0;
                     }
                 }
             }
@@ -5010,7 +5012,8 @@ namespace GameObjects
                 {
                     if (((Session.Current.Scenario.DiplomaticRelations.GetDiplomaticRelation(target.ID, f.ID).Relation +
                         Person.GetIdealOffset(target.Leader, f.Leader) * 1.5) < 0
-                        && (GameObject.Chance(60) || simulate) && !f.IsFriendly(target) && (f.adjacentTo(target) || GameObject.Chance(30) || simulate))
+                        && (GameObject.Chance(60 - Math.Min(60, target.Leader.Karma)) || simulate) && !f.IsFriendly(target) && 
+                        (f.adjacentTo(target) || GameObject.Chance(30 - Math.Min(60, target.Leader.Karma) / 2) || simulate))
                         )
                     {
                         encircleList.Add(f);
@@ -5164,7 +5167,7 @@ namespace GameObjects
                 {
                     Session.Current.Scenario.DiplomaticRelations.GetDiplomaticRelation(this.ID, toBreak.ID).Relation = 0;
 
-                    this.Leader.DecreaseKarma(10);
+                    this.Leader.DecreaseKarma(5);
 
                     //AI宣布主动解盟
                     Session.MainGame.mainGameScreen.xianshishijiantupian(toBreak.Leader, this.Leader.Name, TextMessageKind.ResetDiplomaticRelation, "ResetDiplomaticRelation", "ResetDiplomaticRelation.jpg", "ResetDiplomaticRelation", toBreak.LeaderName, true);

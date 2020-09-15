@@ -24,7 +24,7 @@ namespace Platforms
         UWP,
         Desktop  //Mac, Linux
     }
-    
+
     public abstract class PlatformBase
     {
         public static string Product = "WorldOfTheThreeKingdoms";
@@ -34,7 +34,9 @@ namespace Platforms
         public static Platform Current = new Platform();
         //System.IO.File.Exists(GameApplicationUrl))
         //System.Reflection.AssemblyName.GetAssemblyName(GameApplicationUrl).Version.ToString();
-        public static string GameVersion = "1.1.1.0";
+        public static string GameVersion = "1.2.8.8";
+
+        public static int PackVersion = 1288;
 
         public static string GameVersionType = "dev";
 
@@ -132,12 +134,12 @@ namespace Platforms
 
         public virtual void SetMouseVisible(bool visible)
         {
-            
+
         }
 
         public virtual void SetWindowAllowUserResizing(bool allow)
         {
-            
+
         }
 
         public virtual void SetTimerDisabled(bool timerDisabled)
@@ -337,22 +339,22 @@ namespace Platforms
 
         public virtual void MirrorPicture(byte[] image, PlatformTask action)
         {
-            
+
         }
 
         public virtual void RotatePicture(byte[] image, int rotate, PlatformTask action)
         {
-            
+
         }
 
         public virtual void CropPicture(byte[] image, int x, int y, int width, int height, PlatformTask action)
         {
-            
+
         }
 
         public virtual void ResizeImageFile(byte[] image, int targetSizeWidth, int targetSizeHeight, bool sameRatio, PlatformTask action)
         {
-            
+
         }
 
         public virtual void CropResizePicture(byte[] image, int x, int y, int width, int height, int targetSizeWidth, int targetSizeHeight, bool sameRatio, PlatformTask action)
@@ -375,55 +377,121 @@ namespace Platforms
             return null;
         }
 
-		/// <summary>
-		/// 設置音量
-		/// </summary>
-		/// <param name="volume"></param>
-		public virtual void SetMusicVolume(int volume)
-		{
-			//if (Sound != null) {
-			//	Sound.Volume = Convert.ToSingle(volume)/100f;
-			//}
-			try
-			{
-				MediaPlayer.Volume = Convert.ToSingle(volume) / 100;
-			}
+        /// <summary>
+        /// 設置音量
+        /// </summary>
+        /// <param name="volume"></param>
+        public virtual void SetMusicVolume(int volume)
+        {
+            //if (Sound != null) {
+            //	Sound.Volume = Convert.ToSingle(volume)/100f;
+            //}
+            try
+            {
+                MediaPlayer.Volume = Convert.ToSingle(volume) / 100;
+            }
 #pragma warning disable CS0168 // The variable 'ex' is declared but never used
-			catch (Exception ex)
+            catch (Exception ex)
 #pragma warning restore CS0168 // The variable 'ex' is declared but never used
-			{
-				//Why?
-			}
-		}
-		/// <summary>
-		/// 播放歌曲
-		/// </summary>
-		/// <param name="url"></param>
-		public virtual void PlaySong(string res)
-		{
-			try
-			{
-				Session.Current.MusicContent.Unload();
-				Song song = Session.Current.MusicContent.Load<Song>(res);
+            {
+                //Why?
+            }
+        }
+        /// <summary>
+        /// 播放歌曲
+        /// </summary>
+        /// <param name="url"></param>
+        public virtual void PlaySong(string res)
+        {
+            try
+            {
+                if (String.IsNullOrEmpty(Path.GetExtension(res)))
+                {
+                    res = res + ".mp3";
+                }
+
+                if (Platform.PlatFormType == PlatFormType.Android)
+                {
+                    if (res.Contains("\\"))
+                    {
+                        res = res.Substring(res.LastIndexOf('\\') + 1);
+                    }
+                }
+
+                Session.Current.MusicContent.Unload();
+                Song song = Song.FromUri(res, new Uri(res, UriKind.Relative));  // Session.Current.MusicContent.Load<Song>(res);
                 SetMusicVolume((int)Setting.Current.MusicVolume);
-				MediaPlayer.IsRepeating = true;
-				MediaPlayer.Play(song);
+                MediaPlayer.IsRepeating = true;
+                MediaPlayer.Play(song);
 
-            //    var songs = Directory.EnumerateFiles(directory, "*.mp3")
-            //.Select(file => Song.FromUri(file, new Uri(file)))
-            //.ToList();
+                //    var songs = Directory.EnumerateFiles(directory, "*.mp3")
+                //.Select(file => Song.FromUri(file, new Uri(file)))
+                //.ToList();
 
-            //You can look in the Music folder by setting directory to the following:
-            //string directory = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+                //You can look in the Music folder by setting directory to the following:
+                //string directory = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
 
-			}
+            }
 #pragma warning disable CS0168 // The variable 'ex' is declared but never used
-			catch (Exception ex)
+            catch (Exception ex)
 #pragma warning restore CS0168 // The variable 'ex' is declared but never used
-			{
-				//监控此
-			}
-		}
+            {
+                //监控此
+            }
+        }
+        List<string> songs2 = new List<string>();
+        List<Song> songslist = new List<Song>();
+        public virtual void PlaySong(string[] songs)
+        {
+            try
+            {
+                string res = "";
+                songs2 = new List<string>();
+                songslist = new List<Song>();
+                foreach (var item in songs)
+                {
+                    res = item;
+                    if ((!item.EndsWith(".mp3") && !item.EndsWith(".wav")))
+                    {
+                        continue;
+                    }
+                    if (Platform.PlatFormType == PlatFormType.Android)
+                    {
+                        if (res.Contains("\\"))
+                        {
+                            res = res.Substring(res.LastIndexOf('\\') + 1);
+                        }
+                    }
+                    songs2.Add(res);
+                    Song song3 = Song.FromUri(res, new Uri(res, UriKind.Relative));
+                    songslist.Add(song3);
+                }
+                if (songslist.Count >= 1)
+                {
+                    Session.Current.MusicContent.Unload();
+                    SetMusicVolume((int)Setting.Current.MusicVolume);
+                    MediaPlayer.MediaStateChanged += MediaPlayer_MediaStateChanged;
+                    void MediaPlayer_MediaStateChanged(object sender, EventArgs e)
+                    {
+                        if (songs2.Count > 0 && Session.GlobalVariables.PlayMusic && MediaPlayer.State== MediaState.Stopped)
+                        {
+                            MediaPlayer.Play(getrandomsong());
+                        }
+                    }
+                    MediaPlayer.Play(getrandomsong());
+                }
+            }
+            catch (Exception ex)
+            {
+                //监控此
+            }
+        }
+        Song getrandomsong()
+        {
+             Random rd = new Random();
+             int index = rd.Next(0, songslist.Count);
+            return songslist[index];
+        }
         public virtual void StopSong()
         {
             try
@@ -448,7 +516,7 @@ namespace Platforms
             catch (Exception ex)
 #pragma warning restore CS0168 // The variable 'ex' is declared but never used
             {
-                
+
             }
         }
         public virtual void ResumeSong()
@@ -469,38 +537,44 @@ namespace Platforms
         /// </summary>
         /// <param name="url"></param>
         public virtual bool PlayEffect(string res)
-		{
+        {
             if (String.IsNullOrEmpty(res))
             {
                 return true;
             }
-			try
-			{
-				SoundEffect effect = Session.Current.SoundContent.Load<SoundEffect>(res);
-				effect.Play(Convert.ToSingle(Setting.Current.SoundVolume) / 100, 0.0f, 0.0f);
+            if (String.IsNullOrEmpty(Path.GetExtension(res)))
+            {
+                res = res + ".wav";
+            }
+            try
+            {
+                var bytes = Current.LoadFile(res);
+                var mem = new MemoryStream(bytes);
+                SoundEffect effect = SoundEffect.FromStream(mem); // Session.Current.SoundContent.Load<SoundEffect>(res);
+                effect.Play(Convert.ToSingle(Setting.Current.SoundVolume) / 100, 0.0f, 0.0f);
                 return true;
-			}
+            }
 #pragma warning disable CS0168 // The variable 'ex' is declared but never used
-			catch (Exception ex)
+            catch (Exception ex)
 #pragma warning restore CS0168 // The variable 'ex' is declared but never used
-			{
+            {
                 //监控此
                 return false;
-			}
-		}
+            }
+        }
 
         public virtual void PlayEffects(string[] list, string ext)
         {
             if (list == null || list.Length == 0) return;
 
-            foreach(var li in list)
+            foreach (var li in list)
             {
                 //if (FileContentExists(li, ext))
                 //{
-                    if (PlayEffect(li))
-                    {
-                        return;
-                    }
+                if (PlayEffect(li))
+                {
+                    return;
+                }
                 //}
             }
         }
@@ -532,6 +606,84 @@ namespace Platforms
 
         #region 用戶文件夾處理
 
+        public string GetMODFile(string res)
+        {
+            //res = res.Replace("\\", "/");
+
+            //根據MOD來選擇素材
+            if (Setting.Current == null || String.IsNullOrEmpty(Setting.Current.MODRuntime))
+            {
+
+            }
+            else
+            {
+                var mod = res.Replace("Content", "MODs/" + Setting.Current.MODRuntime);
+
+                if (Platform.Current.FileExists(mod))
+                {
+                    res = mod;
+                }
+            }
+
+            return res;
+        }
+
+        public string[] GetMODFiles(string dir, bool full)
+        {
+            string[] files = null;
+
+            //根據MOD來選擇素材
+            if (String.IsNullOrEmpty(Setting.Current.MODRuntime))
+            {
+                files = GetFilesBasic(dir, full).NullToEmptyArray();
+            }
+            else
+            {
+                var mod = dir.Replace("Content", "MODs\\" + Setting.Current.MODRuntime);
+
+                files = GetFiles(mod, full).NullToEmptyArray();
+
+                if (files.Length == 0)
+                {
+                    files = GetFilesBasic(dir, full).NullToEmptyArray();
+                }
+                else
+                {
+                    
+                }
+            }
+
+            return files;
+        }
+
+        public string[] GetMODDirectories(string dir, bool full)
+        {
+            string[] dirs = null;
+
+            //根據MOD來選擇文件夾
+            if (String.IsNullOrEmpty(Setting.Current.MODRuntime))
+            {
+                dirs = GetDirectories(dir, false, full).NullToEmptyArray();
+            }
+            else
+            {
+                var mod = dir.Replace("Content", "MODs\\" + Setting.Current.MODRuntime);
+
+                dirs = GetDirectories(mod, false, full).NullToEmptyArray();
+
+                if (dirs.Length == 0)
+                {
+                    dirs = GetDirectoriesBasic(dir, false, full).NullToEmptyArray();
+                }
+                else
+                {
+
+                }
+            }
+
+            return dirs;
+        }
+
         protected string UserApplicationDataPath
         {
             get
@@ -540,7 +692,27 @@ namespace Platforms
             }
         }
 
-        public virtual string[] GetFiles(string dir)
+        public virtual string[] GetDirectories(string dir, bool all, bool full)
+        {
+            return null;
+        }
+
+        public virtual string[] GetDirectoriesBasic(string dir, bool all, bool full)
+        {
+            return null;
+        }
+
+        public virtual string[] GetDirectoriesExpan(string dir, bool all, bool full)
+        {
+            return null;
+        }
+
+        public virtual string[] GetFiles(string dir, bool all)
+        {
+            return null;
+        }
+
+        public virtual string[] GetFilesBasic(string dir, bool all = false)
         {
             return null;
         }
@@ -562,12 +734,12 @@ namespace Platforms
 
         public virtual void WriteAllText(string file, string xml1)
         {
-            
+
         }
 
         public virtual void WriteAllBytes(string file, byte[] bytes1)
         {
-            
+
         }
 
         public virtual Stream FileOpenWrite(string file, bool write)
@@ -582,7 +754,7 @@ namespace Platforms
 
         public virtual void FileDelete(string file)
         {
-            
+
         }
 
         public virtual bool DirectoryExists(string dir)
@@ -592,7 +764,7 @@ namespace Platforms
 
         public virtual void DirectoryCreateDirectory(string dir)
         {
-            
+
         }
 
         public virtual string DirectoryName(string dir)

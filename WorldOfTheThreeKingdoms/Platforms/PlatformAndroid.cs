@@ -25,7 +25,6 @@ using System.Xml;
 using Tools;
 using Matrix = Android.Graphics.Matrix;
 
-
 namespace Platforms
 {
     /// <summary>
@@ -38,6 +37,29 @@ namespace Platforms
         public static new bool IsMobilePlatForm = true;
 
         public new string Channel = "";  //"PlayStore";
+
+        public bool LoadFromOBB
+        {
+            get
+            {
+                if (System.String.IsNullOrEmpty(Channel))
+                {
+                    if (Setting.Current != null && 
+                        (System.String.IsNullOrEmpty(Setting.Current.MODRuntime) || Setting.Current.MODRuntime == "Qinghuai"))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
 
         public static bool IsActive
         {
@@ -130,6 +152,19 @@ namespace Platforms
                 Session.MainGame.fullScreenDestination = new Rectangle(0, 0, dm.HeightPixels, dm.WidthPixels);
             }
 
+            AndroidContentManager.Init();
+
+            //if (System.String.IsNullOrEmpty(Platform.Current.Channel))
+            //{
+
+            //}
+            //else
+            //{
+                
+            //}
+
+            //var stream = AndroidContentManager.OpenStream("Setting.png");
+
             //CoreGame.Current.view = PreferResolution;
             //double x = Math.Pow(Convert.ToSingle(dm.WidthPixels) / dm.Xdpi, 2);
             //double y = Math.Pow(Convert.ToSingle(dm.HeightPixels) / dm.Ydpi, 2);
@@ -160,12 +195,37 @@ namespace Platforms
             return System.Environment.OSVersion.Platform + " " + System.Environment.OSVersion.VersionString;
         }
 
-        #region 用戶文件夾處理
-
-
-        #endregion
-
         #region 加載資源文件
+
+        public Stream LoadStream(string res)
+        {
+            res = res.Replace("\\", "/");
+
+            Stream stream = null;
+            if (LoadFromOBB)
+            {
+                if (FileExists(res))
+                {
+                    stream = AndroidContentManager.OpenStream(res);
+                }
+                else
+                {
+                    stream = Game.Activity.Assets.Open(res);
+                }
+            }
+            else
+            {
+                if (FileExists(res))
+                {
+                    stream = Game.Activity.Assets.Open(res);
+                }
+                else
+                {
+                    stream = AndroidContentManager.OpenStream(res);
+                }
+            }
+            return stream;
+        }
         
         /// <summary>
         /// 加載資源文本
@@ -175,9 +235,12 @@ namespace Platforms
         public string LoadText(string res)
         {
             res = res.Replace("\\", "/");
+
+            res = base.GetMODFile(res);
+
             lock (Platform.IoLock)
             {
-                using (var stream = Game.Activity.Assets.Open(res))
+                using (var stream = LoadStream(res))
                 {
                     using (var streamReader = new StreamReader(stream))
                     {
@@ -194,9 +257,12 @@ namespace Platforms
         public string[] LoadTexts(string res)
         {
             res = res.Replace("\\", "/");
+
+            res = base.GetMODFile(res);
+
             lock (Platform.IoLock)
             {
-                using (var stream = Game.Activity.Assets.Open(res))
+                using (var stream = LoadStream(res))
                 {
                     using (var streamReader = new StreamReader(stream))
                     {
@@ -218,11 +284,14 @@ namespace Platforms
         public byte[] LoadFile(string res)
         {
             res = res.Replace("\\", "/");
+
+            res = base.GetMODFile(res);
+
             lock (Platform.IoLock)
             {
                 using (var dest = new MemoryStream())
                 {
-                    using (Stream stream = TitleContainer.OpenStream(res))
+                    using (var stream = LoadStream(res))
                     {
                         stream.CopyTo(dest);
                         return dest.ToArray();
@@ -256,12 +325,12 @@ namespace Platforms
                 }
                 else
                 {
-
+                    res = base.GetMODFile(res);
                 }
 
                 //lock (Platform.IoLock)
                 //{
-                    using (var stream = isUser ? LoadUserFileStream(res) : TitleContainer.OpenStream(res))
+                    using (var stream = isUser ? LoadUserFileStream(res) : LoadStream(res))
                     {
                         //Texture tex = SharpDX.
                         Texture2D tex = Texture2D.FromStream(GraphicsDevice, stream);
@@ -287,17 +356,170 @@ namespace Platforms
             }
         }
 
-        public override string[] GetFiles(string dir)
+        public override string[] ReadAllLines(string file)
         {
-            return Game.Activity.Assets.List(dir);
+            file = file.Replace("\\", "/");
+
+            string[] lines = null;
+
+            lock (Platform.IoLock)
+            {
+                using (var stream = LoadStream(file))
+                {
+                    using (var streamReader = new StreamReader(stream))
+                    {
+                        List<string> texts = new List<string>();
+                        while (!streamReader.EndOfStream)
+                        {
+                            texts.Add(streamReader.ReadLine());
+                        }
+                        lines = texts.ToArray();
+                    }
+                }
+            }
+
+            return lines;
+        }
+
+        public override string[] GetDirectories(string dir, bool all, bool full)
+        {
+            dir = dir.Replace("\\", "/");
+
+            if (!dir.EndsWith("/"))
+            {
+                dir = dir + "/";
+            }
+
+            if (LoadFromOBB)
+            {
+                return GetDirectoriesExpan(dir, all, full);
+            }
+            else
+            {
+                return GetDirectoriesBasic(dir, all, full);
+            }
+        }
+
+        public override string[] GetDirectoriesBasic(string dir, bool all, bool full)
+        {
+            string[] dirs = null;
+
+            dir = dir.Replace("\\", "/");
+            if (!dir.EndsWith("/"))
+            {
+                dir += "/";
+            }
+
+            dirs = Game.Activity.Assets.List(dir).NullToEmptyArray();
+
+            if (full)
+            {
+                dirs = dirs.Select(fi => dir + fi).NullToEmptyArray();
+            }
+
+            return dirs;
+        }
+
+        public override string[] GetDirectoriesExpan(string dir, bool all, bool full)
+        {
+            var directories = new List<string>();
+
+            var allFiles = AndroidContentManager.entries.Where(en => en.StartsWith(dir)).NullToEmptyArray().Select(en => en.Replace(dir + "/", "")).NullToEmptyArray();
+
+            if (full)
+            {
+
+            }
+            else
+            {
+                foreach (var file in allFiles)
+                {
+                    if (file.Contains("/"))
+                    {
+                        var di = file.Substring(0, file.IndexOf('/'));
+                        if (!System.String.IsNullOrEmpty(di) && !directories.Contains(di))
+                        {
+                            directories.Add(di);
+                        }
+                    }
+                }
+            }
+
+            return directories.NullToEmptyArray();
+        }
+
+        public override string[] GetFiles(string dir, bool all = false)
+        {
+            string[] list = null;
+
+            if (dir.Contains("/"))
+            {
+                dir = dir.Substring(0, dir.LastIndexOf('/'));
+            }
+
+            if (LoadFromOBB)
+            {
+                list = AndroidContentManager.entries.Where(en => en.StartsWith(dir)).NullToEmptyArray().Select(en => en.Contains("/") ? en.Substring(en.LastIndexOf('/') + 1) : en).NullToEmptyArray();
+            }
+            else
+            {
+                dir = dir.Replace("\\", "/");
+                list = Game.Activity.Assets.List(dir);
+                if (all)
+                {
+                    if (dir.EndsWith("/"))
+                    {
+                        dir = dir.Substring(0, dir.Length - 1);
+                    }
+                    list = list.Select(fi => dir + "/" + fi).NullToEmptyArray();
+                }
+            }
+
+            return list;
+        }
+
+        public override string[] GetFilesBasic(string dir, bool all = false)
+        {
+            string[] files = null;
+            dir = dir.Replace("\\", "/"); 
+            files = Game.Activity.Assets.List(dir);
+            if (all)
+            {
+                files = files.Select(fi => dir + fi).NullToEmptyArray();
+            }
+            return files;
+        }
+
+        public override bool DirectoryExists(string dir)
+        {
+            string[] list = null;
+
+            if (LoadFromOBB)
+            {
+                list = AndroidContentManager.entries.Where(en => en.StartsWith(dir)).NullToEmptyArray().Select(en => en.Contains("/") ? en.Substring(en.LastIndexOf('/') + 1) : en).NullToEmptyArray();
+            }
+            else
+            {
+                list = Game.Activity.Assets.List(dir);
+            }
+
+            if (list == null || list.Length <= 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         public override bool FileExists(string file)
         {
-            var list = GetFiles(file);
+            var list = GetFiles(file, false);
 
             if (list != null && list.Length > 0)
             {
+                if (file.Contains('/'))
+                {
+                    file = file.Substring(file.LastIndexOf('/') + 1);
+                }
                 return list.Contains(file);
             }
 
@@ -799,34 +1021,7 @@ namespace Platforms
             System.Threading.Thread.Sleep(time);
         }
 
-        public override void OpenMarket(string key)
-        {
-            if (System.String.IsNullOrEmpty(Platform.Current.Channel))
-            {
-                //OpenLink(WebTools.WebSiteView + "/download.aspx?from=WorldOfTheThreeKingdoms" + Platform.PlatFormType.ToString());
-            }
-            else
-            {
-                /* This code assumes you are inside an activity */
-                Uri uri = Uri.Parse("market://details?id=" + Activity1.ApplicationContext.PackageName);
-                Intent rateAppIntent = new Intent(Intent.ActionView, uri);
-
-                if (Activity1.PackageManager.QueryIntentActivities(rateAppIntent, 0).Count > 0)
-                {
-                    Activity1.StartActivity(rateAppIntent);
-                }
-                else
-                {
-                    /* handle your error case: the device has no way to handle market urls */
-                }
-            }
-        }
-
-        public override void OpenReview(string key)
-        {
-            OpenMarket(key);
-        }
-
+        
         public override byte[] ScreenShot(GraphicsDevice graphics, RenderTarget2D screenshot)
         {
             graphics.SetRenderTarget(null);
@@ -1375,6 +1570,197 @@ namespace Platforms
             }
         }
 
+    }
+
+    public static class AndroidContentManager
+    {
+        // Keep this static so we only call Game.Activity.Assets.List() once
+        // No need to call it for each file if the list will never change.
+        // We do need one file list per folder though.
+        static ICSharpCode.SharpZipLib.Zip.ZipFile zif;
+        static ApplicationInfo ainfo;
+
+        static PackageInfo pinfo;
+
+        static string obbPath;
+
+        public static List<string> entries = null;
+
+        public static void Init()
+        {
+            if (entries == null)
+            {
+                Activity activity = Game.Activity;
+
+                try
+                {
+                    ainfo = activity.ApplicationInfo;
+                    pinfo = activity.PackageManager.GetPackageInfo(ainfo.PackageName, PackageInfoFlags.MetaData);
+
+                    obbPath = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "Android", "obb", ainfo.PackageName, $"main.{Platform.PackVersion}.{ainfo.PackageName}.obb");
+                    //#if DEBUG
+                    //                obbPath = System.IO.Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "Android", "obb", ainfo.PackageName + ".debug", String.Format("main.{0}.{1}.obb", expansionPackVersion, ainfo.PackageName));
+                    //#else
+                    //            obbPath = Path.Combine (Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "Android", "obb", ainfo.PackageName, String.Format ("main.{0}.{1}.obb", expansionPackVersion, ainfo.PackageName));
+                    //#endif
+                    entries = new List<string>();
+                    if (File.Exists(obbPath))
+                    {
+                        zif = new ICSharpCode.SharpZipLib.Zip.ZipFile(obbPath);
+
+                        entries = new List<string>();
+
+                        for (int i = 0; i < zif.Count; i++)
+                        {
+                            var file = zif[i].Name;
+                            if (System.IO.Path.GetExtension(file).Length > 0)
+                            {
+                                entries.Add(file);
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    //System.Diagnostics.Debug.WriteLine("++    Zip expansion file could not be opened    ++  {0}", e.Message);
+                    zif = null;
+                }
+            }
+        }
+
+        public static Stream OpenStream(string assetName)
+        {
+            //Stream stream;
+
+            string assetPath = assetName;  // System.IO.Path.Combine(RootDirectory, assetName) + ".xnb";
+
+            Activity activity = Game.Activity;
+
+            string filePath = assetPath;
+
+            lock (Platform.IoLock)
+            {
+                var ze = zif.GetEntry(filePath);
+
+                using (var stream = zif.GetInputStream(ze))
+                {
+                    var mstream = new MemoryStream((int)ze.Size);
+
+                    stream.CopyTo(mstream);
+
+                    mstream.Seek(0, SeekOrigin.Begin);
+
+                    return mstream;
+                }
+            }
+        }
+
+
+        //static string[] textureExtensions = new string[] { ".jpg", ".bmp", ".jpeg", ".png", ".gif" };
+        //static string[] songExtensions = new string[] { ".mp3", ".ogg", ".mid" };
+        //static string[] soundEffectExtensions = new string[] { ".wav", ".mp3", ".ogg", ".mid" };
+        //protected override string Normalize<T>(string assetName)
+        //{
+        //    string result = null;
+
+        //    if (typeof(T) == typeof(Texture2D) || typeof(T) == typeof(Texture))
+        //    {
+        //        result = Normalize(assetName, textureExtensions);
+        //    }
+        //    else if ((typeof(T) == typeof(Song)))
+        //    {
+        //        result = Normalize(assetName, songExtensions);
+        //    }
+        //    else if ((typeof(T) == typeof(SoundEffect)))
+        //    {
+        //        result = Normalize(assetName, soundEffectExtensions);
+        //    }
+        //    if (result == null)
+        //    { //item might not be in the package or be an unsupported file type
+        //        result = base.Normalize<T>(assetName);
+        //    }
+        //    return result;
+        //}
+
+        //protected override object ReadRawAsset<T>(string assetName, string originalAssetName)
+        //{
+        //    if (zif == null)
+        //        return base.ReadRawAsset<T>(assetName, originalAssetName);
+        //    var ze = zif.GetEntry(assetName);
+        //    if (ze == null)
+        //    {
+        //        return base.ReadRawAsset<T>(assetName, originalAssetName);
+        //    }
+        //    if (typeof(T) == typeof(Texture2D) || typeof(T) == typeof(Texture))
+        //    {
+        //        lock (ContentManagerLock)
+        //        {
+        //            using (MemoryStream mstream = new MemoryStream((int)ze.Size))
+        //            {
+
+        //                using (var stream = zif.GetInputStream(ze))
+        //                {
+        //                    stream.CopyTo(mstream);
+
+        //                    mstream.Seek(0, SeekOrigin.Begin);
+
+        //                }
+
+        //                Texture2D texture = Texture2D.FromStream(
+        //                                        graphicsDeviceService.GraphicsDevice, mstream);
+        //                texture.Name = originalAssetName;
+        //                return texture;
+        //            }
+        //        }
+        //    }
+        //    else if ((typeof(T) == typeof(Song)))
+        //    {
+        //        return new Song(obbPath, zif.LocateEntry(ze), ze.CompressedSize);
+        //    }
+        //    else if ((typeof(T) == typeof(SoundEffect)))
+        //    {
+        //        return new SoundEffect(obbPath, zif.LocateEntry(ze), ze.CompressedSize);
+        //    }
+        //    throw new NotImplementedException("This format of file is not supported as raw file");
+        //}
+
+        //internal string Normalize(string fileName, string[] extensions)
+        //{
+        //    if (zif == null)
+        //        return null;
+        //    int index = fileName.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
+        //    string path = string.Empty;
+        //    string file = fileName;
+        //    if (index >= 0)
+        //    {
+        //        path = fileName.Substring(0, index);
+        //        file = fileName.Substring(index + 1, fileName.Length - index - 1);
+        //    }
+
+        //    Dictionary<string, int> files = null;
+        //    if (!entries.TryGetValue(path, out files))
+        //        return null;
+
+        //    bool found = false;
+        //    index = -1;
+        //    foreach (string s in extensions)
+        //    {
+        //        if (files.TryGetValue(file + s, out index))
+        //        {
+        //            found = true;
+        //            break;
+        //        }
+        //    }
+        //    if (!found)
+        //        return null;
+
+        //    return zif[index].Name;
+        //}
     }
 
     public static class BitmapHelpers

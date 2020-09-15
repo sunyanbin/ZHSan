@@ -41,6 +41,8 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
                 this.LoadScenario(base.InitializationFileName, base.InitializationFactionIDs, true, this);
 
+                Session.Current.Scenario.MOD = Setting.Current.MOD;
+
                 var globalVariables = Session.globalVariablesTemp;  //.globalVariablesBasic.Clone();
 
                 var gameParameters = Session.parametersTemp;  //.parametersBasic.Clone();
@@ -62,8 +64,11 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 {
                     globalVariables.SkyEye = false;
                 }
+
+                Session.Current.Scenario.GlobalVariables = globalVariables;
+                Session.Current.Scenario.Parameters = gameParameters;
                 //以下修改是为了可以使剧本自带一些设置，这样可以使剧本作者能够预设一些特殊设定
-                if (Session.Current.Scenario.GlobalVariables != null)
+                /*if (Session.Current.Scenario.GlobalVariables != null)
                 {
                     System.Reflection.FieldInfo[] 非getset字段表 = typeof(GlobalVariables).GetFields((System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
                     foreach (var v in 非getset字段表)
@@ -93,7 +98,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 else
                 {
                     Session.Current.Scenario.Parameters = gameParameters;
-                }
+                }*/
 
                 // Session.Current.Scenario.GlobalVariables = globalVariables;
                 // Session.Current.Scenario.Parameters = gameParameters;
@@ -114,7 +119,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                     }
                     else
                     {
-                        Setting.Current.GlobalVariables.DialogShowTime = Session.globalVariablesBasic.DialogShowTime;
+                        //Setting.Current.GlobalVariables.DialogShowTime = Session.globalVariablesBasic.DialogShowTime;
                     }
                 }
 
@@ -206,6 +211,19 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             {
                 Session.GlobalVariables.SaveToXml();
                 Session.Parameters.SaveToXml();
+
+                //这里已经保存了玩家自定的信息后，再单独加载剧本制作者设定的信息，这样不会将玩家的设定保存覆盖
+                string str = @"Content\Data\Scenario\" + base.InitializationFileName + "GlobalVariables.xml";
+                if (File.Exists(Environment.CurrentDirectory + "\\" + str))
+                {
+                    Session.Current.Scenario.GlobalVariables.InitialGlobalVariables(str);
+                }
+                string str2 = @"Content\Data\Scenario\" + base.InitializationFileName + "GameParameters.xml";
+                if (File.Exists(Environment.CurrentDirectory + "\\" + str2))
+                {
+                    Session.Current.Scenario.Parameters.InitializeGameParameters(str2);
+                }
+
                 Session.Current.Scenario.AfterLoadGameScenario(this);
             }
             else
@@ -229,7 +247,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 //this.Plugins.youcelanPlugin.IsShowing = true;
                 ((this.Plugins.youcelanPlugin as youcelanPlugin.TabListPlugin).TabList as TabListInFrame).SetMouseEvent(this, true);
             }
-
+            Session.Current.Scenario.Date.SetSeason();
             //this.thisGame.jiazaitishi.jiazaijindu.Value = 90;
         }
 
@@ -255,16 +273,16 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             //Microsoft.Xna.Framework.Color color1 = new Color(1f, 1f, 1f);
 
             //qizidezi = new FreeText(new System.Drawing.Font("方正北魏楷书繁体", 30f), new Color(1f, 1f, 1f));
-            
+
             foreach (Architecture jianzhu in Session.Current.Scenario.Architectures)
             {
-
                 //jianzhu.jianzhubiaoti = new FreeText(fontjianzhu, colorjianzhu);
                 ///////jianzhu.jianzhubiaoti.DisplayOffset = new Point(0, -mainMapLayer.TileWidth / 2);
                 //jianzhu.jianzhubiaoti.Text = jianzhu.Name;
                 //jianzhu.jianzhubiaoti.Align = TextAlign.Left;
                 jianzhu.jianzhuqizi = new qizi();
                 //jianzhu.jianzhuqizi.qizidezi = new FreeText(font1, color1);
+
                 try
                 {
                     jianzhu.CaptionTexture = CacheManager.GetTempTexture("Content/Textures/Resources/Architecture/Caption/" + jianzhu.CaptionID + ".png");
@@ -275,6 +293,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 {
                     jianzhu.CaptionTexture = CacheManager.GetTempTexture("Content/Textures/Resources/Architecture/Caption/None.png");
                 }
+
                 /*
                 if (jianzhu.BelongedFaction != null)
                 {
@@ -283,8 +302,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
                 //this.qizidezi.Align = TextAlign.Middle;
 
-
-                jianzhu.jianzhuqizi.qizipoint = new Point(jianzhu.dingdian.X, jianzhu.dingdian.Y-1);
+                jianzhu.jianzhuqizi.qizipoint = new Point(jianzhu.dingdian.X, jianzhu.dingdian.Y - 1);
 
             }
         }
@@ -313,31 +331,22 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             this.Plugins.OptionDialogPlugin.Clear();
 
             var saves = GameScenario.LoadScenarioSaves();
+            for (int i = 0; i <= GameScenario.savemaxcounts; i++)
+            {
+                string ss = i < 10 ? "0" + i.ToString() : i.ToString();
+                GameDelegates.VoidFunction voidFunction = delegate
+                {
+                    var sce = saves[int.Parse(ss)];
 
-            this.Plugins.OptionDialogPlugin.AddOption(saves[0].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromAutoPosition));
-
-            this.Plugins.OptionDialogPlugin.AddOption(saves[1].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition01));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[2].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition02));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[3].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition03));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[4].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition04));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[5].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition05));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[6].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition06));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[7].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition07));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[8].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition08));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[9].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition09));
-            this.Plugins.OptionDialogPlugin.AddOption(saves[10].Summary, null, new GameDelegates.VoidFunction(this.LoadGameFromPosition10));            
-
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save01" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition01));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save02" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition02));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save03" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition03));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save04" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition04));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save05" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition05));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save06" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition06));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save07" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition07));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save08" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition08));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save09" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition09));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("Save10" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromPosition10));
-            //this.Plugins.OptionDialogPlugin.AddOption(this.GetSaveFileDisplayText("AutoSave" + this.SaveFileExtension), null, new GameDelegates.VoidFunction(this.LoadGameFromAutoPosition));
+                    if (!String.IsNullOrEmpty(sce.Title))
+                    {
+                        mainMapLayer.StopThreads();
+                        Session.StartScenario(sce, true);
+                    }
+                };
+                saves[i].ID = ss;
+                this.Plugins.OptionDialogPlugin.AddOption(saves[i].Summary, null, voidFunction);
+            }
 
             this.Plugins.OptionDialogPlugin.EndAddOptions();
             this.Plugins.OptionDialogPlugin.ShowOptionDialog(ShowPosition.Center);
@@ -374,106 +383,6 @@ namespace WorldOfTheThreeKingdoms.GameScreens
             //thread = null;
         }
 
-        private void LoadGameFromPosition01()
-        {
-            LoadGameFromPosition("01");
-            //this.LoadFileName = "Save01" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition02()
-        {
-            LoadGameFromPosition("02");
-            //this.LoadFileName = "Save02" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition03()
-        {
-            LoadGameFromPosition("03");
-            //this.LoadFileName = "Save03" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition04()
-        {
-            LoadGameFromPosition("04");
-            //this.LoadFileName = "Save04" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition05()
-        {
-            LoadGameFromPosition("05");
-            //this.LoadFileName = "Save05" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition06()
-        {
-            LoadGameFromPosition("06");
-            //this.LoadFileName = "Save06" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition07()
-        {
-            LoadGameFromPosition("07");
-            //this.LoadFileName = "Save07" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition08()
-        {
-            LoadGameFromPosition("08");
-            //this.LoadFileName = "Save08" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition09()
-        {
-            LoadGameFromPosition("09");
-            //this.LoadFileName = "Save09" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
-        private void LoadGameFromPosition10()
-        {
-            LoadGameFromPosition("10");
-            //this.LoadFileName = "Save10" + this.SaveFileExtension;
-            //Thread thread = new Thread(new ThreadStart(this.LoadGameFromDisk));
-            //thread.Start();
-            //thread.Join();
-            //thread = null;
-        }
-
         public static GameScenario LoadScenarioData(string scenarioName, bool fromScenario, MainGameScreen mainGameScreen, bool editing = false)
         {
             //Stopwatch stopwatch = new Stopwatch();
@@ -483,20 +392,25 @@ namespace WorldOfTheThreeKingdoms.GameScreens
 
             Session.Current.IsWorking = true;
 
-            bool zip = true;
+            //bool zip = true;
 
-            if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
-            {
-                zip = false;
-            }
+            //if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
+            //{
+            //    zip = false;
+            //}
 
             if (fromScenario)
             {
-                scenario = Tools.SimpleSerializer.DeserializeJsonFile<GameScenario>(scenarioName, false, zip);
+                scenario = Tools.SimpleSerializer.DeserializeJsonFile<GameScenario>(scenarioName, false, false);
             }
             else
             {
-                scenario = Tools.SimpleSerializer.DeserializeJsonFile<GameScenario>(scenarioName, true, zip);
+                scenario = Tools.SimpleSerializer.DeserializeJsonFile<GameScenario>(scenarioName, true, false);
+
+                if (scenario == null)
+                {
+                    scenario = Tools.SimpleSerializer.DeserializeJsonFile<GameScenario>(scenarioName, true, true);
+                }
             }
 
             Session.Current.IsWorking = false;
@@ -736,7 +650,7 @@ namespace WorldOfTheThreeKingdoms.GameScreens
                 scenarioName = String.Format(@"Save\{0}.json", filename);
             }
 
-            LoadScenarioData(scenarioName, fromScenario, mainGameScreen);
+            LoadScenarioData(scenarioName, fromScenario, mainGameScreen, false);
 
             var scenario = Session.Current.Scenario;
 

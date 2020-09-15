@@ -14,24 +14,30 @@ namespace GameObjects
     [DataContract]
     public class Routeway : GameObject
     {
+        [DataMember]
         private bool avoidWater;
         
         public Faction BelongedFaction;
+
+        [DataMember]
         private bool building;
         
         public Architecture DestinationArchitecture;
         
         public Architecture EndArchitecture;
+
+        [DataMember]
         private bool HasSupportedLegion = false;
+        [DataMember]
         private int inefficiencyDays;
+        [DataMember]
         private int lastActivePointIndex = -1;
+        [DataMember]
         private bool removeAfterClose;
         
         public void Init()
         {
             RouteArea = new Dictionary<Point, RoutePoint>();
-
-            lastActivePointIndex = -1;
         }
 
         public Dictionary<Point, RoutePoint> RouteArea = new Dictionary<Point, RoutePoint>();
@@ -49,6 +55,12 @@ namespace GameObjects
 
         [DataMember]
         public int DestinationArchitectureString { get; set; }
+
+        [DataMember]
+        public int BelongedFactionString { get; set; }
+
+        [DataMember]
+        public Boolean Developing { get; private set; }
 
         public Architecture StartArchitecture;
 
@@ -191,6 +203,12 @@ namespace GameObjects
                 this.Building = true;
             }
 
+            if (this.StartArchitecture.BelongedSection == null)
+            {
+                this.Close();
+                return;
+            }
+
             if (this.EndArchitecture != null && 
                 this.StartArchitecture.BelongedSection.AIDetail.AutoRun && this.BelongedFaction == this.EndArchitecture.BelongedFaction)
             {
@@ -236,6 +254,7 @@ namespace GameObjects
 
         private void ExpandActiveRouteway(LinkedListNode<RoutePoint> node)
         {
+            this.Developing = false;
             Troop troopByPositionNoCheck;
             int routewayWorkForce = this.BelongedFaction.RoutewayWorkForce;
             if (node == null)
@@ -248,6 +267,7 @@ namespace GameObjects
                     return;
                 }
                 this.StartArchitecture.DecreaseFund(node.Value.BuildFundCost);
+                this.Developing = true;
                 this.LastActivePointIndex++;
                 this.AddRoutePointArea(node.Value);
                 routewayWorkForce -= node.Value.BuildWorkCost;
@@ -268,6 +288,7 @@ namespace GameObjects
                     break;
                 }
                 this.StartArchitecture.DecreaseFund(decrement);
+                this.Developing = true;
                 this.LastActivePointIndex++;
                 this.AddRoutePointArea(node.Next.Value);
                 routewayWorkForce -= node.Next.Value.BuildWorkCost;
@@ -283,58 +304,61 @@ namespace GameObjects
             RoutePoint point = new RoutePoint();
             point.Position = p;
             TerrainDetail terrainDetailByPosition = Session.Current.Scenario.GetTerrainDetailByPosition(p);
-            if (this.RoutePoints.Count <= 0)
+            if (this.BelongedFaction != null)
             {
-                point.Index = 0;
-                point.PreviousDirection = SimpleDirection.None;
-                point.Direction = SimpleDirection.None;
-                point.ConsumptionRate = terrainDetailByPosition.RoutewayConsumptionRate * this.BelongedFaction.RateOfRoutewayConsumption;
-                point.BuildFundCost = (int) (terrainDetailByPosition.RoutewayBuildFundCost * this.StartArchitecture.RateOfRoutewayBuildFundCost);
-                point.ActiveFundCost = terrainDetailByPosition.RoutewayActiveFundCost;
-                point.BuildWorkCost = terrainDetailByPosition.RoutewayBuildWorkCost;
-            }
-            else
-            {
-                point.Index = this.LastPoint.Index + 1;
-                int num = p.X - this.LastPoint.Position.X;
-                int num2 = p.Y - this.LastPoint.Position.Y;
-                switch (num)
+                if (this.RoutePoints.Count <= 0)
                 {
-                    case -1:
-                        this.LastPoint.Direction = SimpleDirection.Left;
-                        break;
-
-                    case 0:
-                        switch (num2)
-                        {
-                            case -1:
-                                this.LastPoint.Direction = SimpleDirection.Up;
-                                break;
-
-                            case 1:
-                                this.LastPoint.Direction = SimpleDirection.Down;
-                                break;
-                        }
-                        break;
-
-                    case 1:
-                        this.LastPoint.Direction = SimpleDirection.Right;
-                        break;
+                    point.Index = 0;
+                    point.PreviousDirection = SimpleDirection.None;
+                    point.Direction = SimpleDirection.None;
+                    point.ConsumptionRate = terrainDetailByPosition.RoutewayConsumptionRate * this.BelongedFaction.RateOfRoutewayConsumption;
+                    point.BuildFundCost = (int)(terrainDetailByPosition.RoutewayBuildFundCost * this.StartArchitecture.RateOfRoutewayBuildFundCost);
+                    point.ActiveFundCost = terrainDetailByPosition.RoutewayActiveFundCost;
+                    point.BuildWorkCost = terrainDetailByPosition.RoutewayBuildWorkCost;
                 }
-                point.PreviousDirection = this.LastPoint.Direction;
-                point.Direction = SimpleDirection.None;
-                point.ConsumptionRate = this.LastPoint.ConsumptionRate + (terrainDetailByPosition.RoutewayConsumptionRate * this.BelongedFaction.RateOfRoutewayConsumption);
-                point.BuildFundCost = this.LastPoint.BuildFundCost + ((int) (terrainDetailByPosition.RoutewayBuildFundCost * this.StartArchitecture.RateOfRoutewayBuildFundCost));
-                point.ActiveFundCost = this.LastPoint.ActiveFundCost + terrainDetailByPosition.RoutewayActiveFundCost;
-                point.BuildWorkCost = terrainDetailByPosition.RoutewayBuildWorkCost;
+                else
+                {
+                    point.Index = this.LastPoint.Index + 1;
+                    int num = p.X - this.LastPoint.Position.X;
+                    int num2 = p.Y - this.LastPoint.Position.Y;
+                    switch (num)
+                    {
+                        case -1:
+                            this.LastPoint.Direction = SimpleDirection.Left;
+                            break;
+
+                        case 0:
+                            switch (num2)
+                            {
+                                case -1:
+                                    this.LastPoint.Direction = SimpleDirection.Up;
+                                    break;
+
+                                case 1:
+                                    this.LastPoint.Direction = SimpleDirection.Down;
+                                    break;
+                            }
+                            break;
+
+                        case 1:
+                            this.LastPoint.Direction = SimpleDirection.Right;
+                            break;
+                    }
+                    point.PreviousDirection = this.LastPoint.Direction;
+                    point.Direction = SimpleDirection.None;
+                    point.ConsumptionRate = this.LastPoint.ConsumptionRate + (terrainDetailByPosition.RoutewayConsumptionRate * this.BelongedFaction.RateOfRoutewayConsumption);
+                    point.BuildFundCost = this.LastPoint.BuildFundCost + ((int)(terrainDetailByPosition.RoutewayBuildFundCost * this.StartArchitecture.RateOfRoutewayBuildFundCost));
+                    point.ActiveFundCost = this.LastPoint.ActiveFundCost + terrainDetailByPosition.RoutewayActiveFundCost;
+                    point.BuildWorkCost = terrainDetailByPosition.RoutewayBuildWorkCost;
+                }
+                point.BelongedRouteway = this;
+                this.RoutePoints.AddLast(point);
+                if (this.LastActivePointIndex >= point.Index)
+                {
+                    this.BelongedFaction.AddPositionInformation(p, Session.GlobalVariables.RoutewayInformationLevel);
+                }
+                Session.Current.Scenario.MapTileData[p.X, p.Y].AddTileRouteway(this);
             }
-            point.BelongedRouteway = this;
-            this.RoutePoints.AddLast(point);
-            if (this.LastActivePointIndex >= point.Index)
-            {
-                this.BelongedFaction.AddPositionInformation(p, Session.GlobalVariables.RoutewayInformationLevel);
-            }
-            Session.Current.Scenario.MapTileData[p.X, p.Y].AddTileRouteway(this);
         }
 
         public void ExtendTo(Point point)

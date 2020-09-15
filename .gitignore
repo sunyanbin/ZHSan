@@ -296,10 +296,6 @@ __pycache__/
 
 # Images and resource files
 Content/bin
-Content/Music
-Content/Sound
-Content/Textures
-Content/TexturesAlpha
 
 # No keystores!
 Docs
@@ -310,3 +306,5 @@ Docs
 # InnoSetup Output
 Output/
 References/Win/steam_appid.txt
+
+MODs

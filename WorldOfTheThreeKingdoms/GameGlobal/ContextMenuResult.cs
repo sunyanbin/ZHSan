@@ -49,6 +49,7 @@ namespace GameGlobal
         Internal_Trade_SellFood,
         Internal_Expand,
         Military_Campaign,
+        Military_CampaignAuto,
         Military_Transfer, //运兵
         Military_Troopership,
         Military_Training,
@@ -94,7 +95,6 @@ namespace GameGlobal
         Tactics_Instigate,
         Tactics_Gossip,
         Tactics_Search,
-        Tactics_ClearField,
         Tactics_JailBreak,
         Tactics_Assassinate,
         Diplomacy,
@@ -153,6 +153,7 @@ namespace GameGlobal
         Switch_Music,
         Switch_NormalSound,
         Switch_BattleSound,
+        Switch_TroopVoice,
         Switch_TroopAnimation,
         Switch_FullScreen,
         Switch_SkyEye,

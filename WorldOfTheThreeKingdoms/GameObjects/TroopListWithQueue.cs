@@ -45,11 +45,6 @@ namespace GameObjects
             {
                 if (troop.CanMoveAnyway())
                 {
-                    if (troop.Status == TroopStatus.伪报)
-                    {
-                        int z = 0;
-                        z++;
-                    }
                     troop.InitializeInQueue();
                     if (troop.Status == TroopStatus.埋伏)
                     {
@@ -61,6 +56,8 @@ namespace GameObjects
                     }
                 }
                 troop.Operated = false;
+                troop.SelectedMove = false;
+                troop.SelectedAttack = false;
                 troop.Controllable = true;
             }
         }
@@ -129,12 +126,6 @@ namespace GameObjects
                     Troop item = this.CurrentQueue.Dequeue();
                     if (!item.Destroyed)
                     {
-                        if (item.mingling == "待命")
-                        {
-                            item.OperationDone = true;
-                            break;
-                        }
-
                         if (item.Destroyed || 
                             (item.Status != TroopStatus.一般 && item.Status != TroopStatus.伪报 && item.Status != TroopStatus.挑衅))
                         {
@@ -142,57 +133,28 @@ namespace GameObjects
                             item.OperationDone = true;
                         }
 
-                        if (Session.Current.Scenario.IsPlayer(item.BelongedFaction))
+                        if (!item.Destroyed)
                         {
-                            if (!(item.HasToDoCombatAction || !item.ToDoCombatAction()))
-                            {
-                                item.HasToDoCombatAction = true;
-                                this.CurrentQueue.Enqueue(item);
-                                break;
-                            }
-                            if (item.HasToDoCombatAction)
-                            {
-                                item.HasToDoCombatAction = false;
-                                item.DoCombatAction();
-                                this.CurrentQueue.Enqueue(item);
-                                break;
-                            }
-                            if (this.troopQueue.Count > 0)
-                            {
-                                this.CurrentQueue.Enqueue(this.troopQueue.Dequeue());
-                            }
-
                             if (item.MovabilityLeft > 0)
                             {
                                 this.TroopChangeRealDestination(item);
                                 this.TroopMoveThread(item);
                             }
-                        }
-                        else
-                        {
-                            if (!item.Destroyed)
-                            {
-                                if (item.MovabilityLeft > 0)
-                                {
-                                    this.TroopChangeRealDestination(item);
-                                    this.TroopMoveThread(item);
-                                }
 
-                                if (item.MovabilityLeft <= 0)
+                            if (item.MovabilityLeft <= 0)
+                            {
+                                if (!item.HasToDoCombatAction && item.ToDoCombatAction())
                                 {
-                                    if (!item.HasToDoCombatAction && item.ToDoCombatAction())
-                                    {
-                                        item.HasToDoCombatAction = true;
-                                        this.CurrentQueue.Enqueue(item);
-                                        break;
-                                    }
-                                    if (item.HasToDoCombatAction)
-                                    {
-                                        item.HasToDoCombatAction = false;
-                                        item.DoCombatAction();
-                                        this.CurrentQueue.Enqueue(item);
-                                        break;
-                                    }
+                                    item.HasToDoCombatAction = true;
+                                    this.CurrentQueue.Enqueue(item);
+                                    break;
+                                }
+                                if (item.HasToDoCombatAction)
+                                {
+                                    item.HasToDoCombatAction = false;
+                                    item.DoCombatAction();
+                                    this.CurrentQueue.Enqueue(item);
+                                    break;
                                 }
                             }
                         }
@@ -251,25 +213,28 @@ namespace GameObjects
         }
         private void TroopChangeRealDestination(Troop troop)
         {
-            if (Session.Current.Scenario.IsPlayer(troop.BelongedFaction))
+            if (troop.mingling == "Attack" || troop.mingling == "Stratagem")
             {
-                if (troop.mingling == "攻击军队" && troop.TargetTroop != null)
+                if (troop.TargetTroop != null)
                 {
-                    troop.RealDestination = troop.TargetTroop.Position;
+                    if (!((troop.mingling == "Attack" && troop.CanAttack(troop.TargetTroop)) ||
+                    (troop.mingling == "Stratagem" && troop.CanStratagem(troop.TargetTroop))))
+                    {
+                        troop.RealDestination = troop.TargetTroop.Position;
+                    } else
+                    {
+                        troop.RealDestination = troop.Position;
+                    }
                 }
-                else if (troop.mingling == "攻击军队" && troop.TargetTroop == null)
+                else if (troop.TargetArchitecture != null && troop.mingling == "Attack" && !troop.CanAttack(troop.TargetArchitecture))
                 {
-                    troop.RealDestination = troop.Position;
-                    troop.OperationDone = true;
-                }
-            }
-            /*
-            else if (troop.mingling == "入城")
-            {
-                troop.RealDestination = troop.minglingweizhi;
-            }
-            */
 
+                }
+                else
+                { 
+                    troop.RealDestination = troop.Position;
+                }
+            }
         }
 
 

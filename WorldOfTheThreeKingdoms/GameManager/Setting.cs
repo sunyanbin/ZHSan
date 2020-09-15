@@ -35,6 +35,24 @@ namespace GameManager
         public string BattleSpeed { get; set; }
 
         [DataMember]
+        public string MOD { get; set; }
+
+        public string MODRuntime
+        {
+            get
+            {
+                if (Session.Current == null || Session.Current.Scenario == null || Session.Current.Scenario.MOD == null)
+                {
+                    return Setting.Current.MOD;
+                }
+                else
+                {
+                    return Session.Current.Scenario.MOD;
+                }
+            }
+        }
+
+        [DataMember]
         public GlobalVariables GlobalVariables { get; set; }
 
         public static Setting Current = null;
@@ -44,7 +62,7 @@ namespace GameManager
 
         }
 
-        public static void Init()
+        public static void Init(bool prepare)
         {
             try
             {
@@ -55,7 +73,11 @@ namespace GameManager
                     try
                     {
                         Current = SimpleSerializer.DeserializeJsonFile<Setting>(file1, true, false);
-                        Prepare();
+
+                        if (prepare)
+                        {
+                            Prepare();
+                        }
 
                         Save();
                     }
@@ -73,7 +95,11 @@ namespace GameManager
             if (Current == null)
             {
                 Current = new Setting();
-                Prepare();
+
+                if (prepare)
+                {
+                    Prepare();
+                }
 
                 Save();
             }
@@ -111,7 +137,7 @@ namespace GameManager
                 }
                 if (Current.MusicVolume == null)
                 {
-                    Current.MusicVolume = 30;
+                    Current.MusicVolume = 70;
                 }
                 if (Current.SoundVolume == null)
                 {

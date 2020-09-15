@@ -87,8 +87,32 @@ namespace GameManager
         //public Parameters gameParameters = new Parameters();
         //public GlobalVariables globalVariables = new GlobalVariables();
 
-        public static int ResolutionX = 925;
-        public static int ResolutionY = 520;
+        public static int ResolutionX
+        {
+            get
+            {
+                int resolutionX = 0;
+                if (!String.IsNullOrEmpty(Resolution) && Resolution.Contains("*"))
+                {
+                    int.TryParse(Resolution.Split('*')[0].Trim(), out resolutionX);
+                }
+                return resolutionX;
+            }
+        }
+
+        public static int ResolutionY
+        {
+            get
+            {
+                int resolutionY = 0;
+                if (!String.IsNullOrEmpty(Resolution) && Resolution.Contains("*"))
+                {
+                    int.TryParse(Resolution.Split('*')[1].Trim(), out resolutionY);
+                }
+                return resolutionY;
+            }
+        }
+
         public static string Resolution
         {
             get
@@ -99,8 +123,6 @@ namespace GameManager
             {
                 if (!String.IsNullOrEmpty(value) && value.Contains("*"))
                 {
-                    int.TryParse(value.Split('*')[0].Trim(), out ResolutionX);
-                    int.TryParse(value.Split('*')[1].Trim(), out ResolutionY);
                     if (Setting.Current != null)
                     {
                         Setting.Current.Resolution = value;
@@ -132,6 +154,7 @@ namespace GameManager
         {
             get
             {
+                return null;
                 if (fontE == null)
                 {
                     fontE = FontContent.Load<SpriteFont>("FontE");
@@ -148,6 +171,7 @@ namespace GameManager
         {
             get
             {
+                return null;
                 if (fontL == null)
                 {
                     fontL = FontContent.Load<SpriteFont>("FontL");
@@ -164,6 +188,7 @@ namespace GameManager
         {
             get
             {
+                return null;
                 if (fontS == null)
                 {
                     fontS = FontContent.Load<SpriteFont>("FontS");
@@ -180,6 +205,7 @@ namespace GameManager
         {
             get
             {
+                return null;
                 if (fontT == null)
                 {
                     fontT = FontContent.Load<SpriteFont>("FontT");
@@ -196,6 +222,7 @@ namespace GameManager
         {
             get
             {
+                return null;
                 if (font == null)
                 {
                     Session.LoadFont(Setting.Current.Language);
@@ -230,72 +257,74 @@ namespace GameManager
             new PlatformTask(() =>
             {
                 try
-                {        
-                    if (Platform.PlatFormType == PlatFormType.Win)
-                    {                        
-                        //此選項用於生成壓縮格式的劇本，以減小遊戲占用存儲空間
-                        bool BuildScenarioDataZip = false;
+                {
+                    #region 手機版采用跟PC同樣設置
+                    //if (Platform.PlatFormType == PlatFormType.Win)
+                    //{
+                    //    //此選項用於生成壓縮格式的劇本，以減小遊戲占用存儲空間
+                    //    bool BuildScenarioDataZip = false;
 
-                        if (BuildScenarioDataZip)
-                        {
-                            string comFile = Platform.Current.SolutionDir + @"Content\Data\Common\CommonData.json";
-                            string comFileCon = Platform.Current.ReadAllText(comFile);
-                            var common = Tools.SimpleSerializer.DeserializeJson<CommonData>(comFileCon);
-                            
-                            //var str = System.IO.File.ReadAllText(@"C:\Projects\InfluenceKind.xml");
-                            //var doc = new System.Xml.XmlDocument();
-                            //doc.LoadXml(str);
+                    //    if (BuildScenarioDataZip)
+                    //    {
+                    //        string comFile = Platform.Current.SolutionDir + @"Content\Data\Common\CommonData.json";
+                    //        string comFileCon = Platform.Current.ReadAllText(comFile);
+                    //        var common = Tools.SimpleSerializer.DeserializeJson<CommonData>(comFileCon);
 
-                            //var childNodes = ((System.Xml.XmlLinkedNode)doc.FirstChild).NextSibling.ChildNodes;
+                    //        //var str = System.IO.File.ReadAllText(@"C:\Projects\InfluenceKind.xml");
+                    //        //var doc = new System.Xml.XmlDocument();
+                    //        //doc.LoadXml(str);
 
-                            //foreach (System.Xml.XmlElement child in childNodes)
-                            //{
-                            //    var id = child["ID"];
-                            //    var type = child["Type"];
-                            //    var combat = child["Combat"];
-                            //    var pv = child["AIPersonValue"];
-                            //    var pvp = child["AIPersonValuePow"];
+                    //        //var childNodes = ((System.Xml.XmlLinkedNode)doc.FirstChild).NextSibling.ChildNodes;
 
-                            //    var influ = common.AllInfluenceKinds.InfluenceKinds.FirstOrDefault(inf => inf.Key == int.Parse(id.InnerText));
-                            //    influ.Value.Type = (InfluenceType)Enum.Parse(typeof(InfluenceType), type.InnerText);
-                            //    influ.Value.Combat = combat.InnerText == "1";
-                            //    influ.Value.AIPersonValue = float.Parse(pv.InnerText);
-                            //    influ.Value.AIPersonValuePow = float.Parse(pvp.InnerText);
-                            //}
+                    //        //foreach (System.Xml.XmlElement child in childNodes)
+                    //        //{
+                    //        //    var id = child["ID"];
+                    //        //    var type = child["Type"];
+                    //        //    var combat = child["Combat"];
+                    //        //    var pv = child["AIPersonValue"];
+                    //        //    var pvp = child["AIPersonValuePow"];
 
-                            string json = SimpleSerializer.SerializeJson<CommonData>(common, true);
-                            string comZipFile = Platform.Current.SolutionDir + @"Content\Data\CommonZip\CommonData.json";
-                            Platform.Current.WriteAllText(comZipFile, json);
+                    //        //    var influ = common.AllInfluenceKinds.InfluenceKinds.FirstOrDefault(inf => inf.Key == int.Parse(id.InnerText));
+                    //        //    influ.Value.Type = (InfluenceType)Enum.Parse(typeof(InfluenceType), type.InnerText);
+                    //        //    influ.Value.Combat = combat.InnerText == "1";
+                    //        //    influ.Value.AIPersonValue = float.Parse(pv.InnerText);
+                    //        //    influ.Value.AIPersonValuePow = float.Parse(pvp.InnerText);
+                    //        //}
 
-                            string dir = Platform.Current.SolutionDir + @"Content\Data\Scenario\";
-                            var sces = Platform.Current.GetFiles(dir);
+                    //        string json = SimpleSerializer.SerializeJson<CommonData>(common, true);
+                    //        string comZipFile = Platform.Current.SolutionDir + @"Content\Data\CommonZip\CommonData.json";
+                    //        Platform.Current.WriteAllText(comZipFile, json);
 
-                            foreach (var sce in sces)
-                            {
-                                if (sce.Contains("Scenarios.json"))
-                                {
-                                    continue;
-                                }
+                    //        string dir = Platform.Current.SolutionDir + @"Content\Data\Scenario\";
+                    //        var sces = Platform.Current.GetFiles(dir);
 
-                                string fileName = Platform.Current.GetFileNameFromPath(sce);
-                                string sceFileCon = Platform.Current.ReadAllText(dir + fileName);
-                                var scenario = Tools.SimpleSerializer.DeserializeJson<GameScenario>(sceFileCon, false);
+                    //        foreach (var sce in sces)
+                    //        {
+                    //            if (sce.Contains("Scenarios.json"))
+                    //            {
+                    //                continue;
+                    //            }
 
-                                json = Tools.SimpleSerializer.SerializeJson<GameScenario>(scenario, true);
-                                string scenarioZipFile = Platform.Current.SolutionDir + @"Content\Data\ScenarioZip\" + fileName;
-                                Platform.Current.WriteAllText(scenarioZipFile, json);
-                            }
-                        }
-                    }
+                    //            string fileName = Platform.Current.GetFileNameFromPath(sce);
+                    //            string sceFileCon = Platform.Current.ReadAllText(dir + fileName);
+                    //            var scenario = Tools.SimpleSerializer.DeserializeJson<GameScenario>(sceFileCon, false);
 
-                    bool zip = true;
+                    //            json = Tools.SimpleSerializer.SerializeJson<GameScenario>(scenario, true);
+                    //            string scenarioZipFile = Platform.Current.SolutionDir + @"Content\Data\ScenarioZip\" + fileName;
+                    //            Platform.Current.WriteAllText(scenarioZipFile, json);
+                    //        }
+                    //    }
+                    //}
 
-                    if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
-                    {
-                        zip = false;
-                    }
+                    //bool zip = true;
 
-                    CommonData.Current = Tools.SimpleSerializer.DeserializeJsonFile<CommonData>(@"Content\Data\Common\CommonData.json", false, zip);
+                    //if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
+                    //{
+                    //    zip = false;
+                    //}
+                    #endregion
+
+                    CommonData.Current = Tools.SimpleSerializer.DeserializeJsonFile<CommonData>(@"Content\Data\Common\CommonData.json", false, false);
 
                     GameScenario.ProcessCommonData(CommonData.Current);
 
@@ -324,6 +353,8 @@ namespace GameManager
                 Setting.Current.BattleSpeed = Setting.Current.GlobalVariables.FastBattleSpeed.ToString();
             }
 
+            Session.LoadFont(Setting.Current.Language);
+
             Platform.InitGraphicsDeviceManager();
 
             TouchPanel.EnabledGestures = GestureType.Tap | GestureType.DoubleTap | GestureType.FreeDrag | GestureType.Flick | GestureType.Pinch;
@@ -343,20 +374,38 @@ namespace GameManager
             Current.SoundContent = new ContentManager(Current.Content.ServiceProvider, Current.Content.RootDirectory);
             //Current.SoundContent.RootDirectory = "Content";
 
-            LoadFont(Setting.Current.Language);
+            //LoadFont(Setting.Current.Language);
         }
 
         public static void LoadFont(string language)
         {
-            Session.Current.FontContent.Unload();
+            //Session.Current.FontContent.Unload();
+
+            TextManager.font = null;
+
+            //此處兩種字體及大小可隨需要自由更改
 
             if (language == "cn" || language == "简体")
             {
-                Session.Current.Font = Session.Current.FontContent.Load<SpriteFont>(Platform.Current.PlatformPre + "Content/Font/FontS");
+                CacheManager.FontPair = new FontPair()
+                {
+                    Name = @"Content\Font\FZLB_GBK.TTF",
+                    Size = 30,
+                    Style = "",
+                    Width = 30,
+                    Height = 32
+                };
             }
             else
             {
-                Session.Current.Font = Session.Current.FontContent.Load<SpriteFont>(Platform.Current.PlatformPre + "Content/Font/FontT");
+                CacheManager.FontPair = new FontPair()
+                {
+                    Name = @"Content\Font\JDFGY.TTF",
+                    Size = 28,
+                    Style = "",
+                    Width = 28,
+                    Height = 30
+                };
             }
 
             lock (CacheManager.CacheLock)
@@ -394,7 +443,10 @@ namespace GameManager
 
             if (Platform.PlatFormType == PlatFormType.Win || Platform.PlatFormType == PlatFormType.Desktop)
             {
-                Session.Resolution = Platform.PreferResolution;
+                if (String.IsNullOrEmpty(Session.Resolution))
+                {
+                    Session.Resolution = Platform.PreferResolution;
+                }
 
                 width = int.Parse(Session.Resolution.Split('*')[0]);
                 height = int.Parse(Session.Resolution.Split('*')[1]);
@@ -407,29 +459,29 @@ namespace GameManager
 
                 //InputManager.Scale = new Vector2(screenscalex1, screenscaley1);
 
-                //Platform.SetGraphicsWidthHeight(width, height);
             }
             else if (Platform.PlatFormType == PlatFormType.Android || Platform.PlatFormType == PlatFormType.iOS || Platform.PlatFormType == PlatFormType.UWP)
             {
-                Platform.Current.PreparePhone();
+                //Platform.Current.PreparePhone();
 
                 width = Session.MainGame.fullScreenDestination.Width;  // int.Parse(Platform.PreferResolution.Split('*')[0]);
-                height = Session.MainGame.fullScreenDestination.Height;  // int.Parse(Platform.PreferResolution.Split('*')[1]);                
+                height = Session.MainGame.fullScreenDestination.Height;  // int.Parse(Platform.PreferResolution.Split('*')[1]);
             }
 
-			float slope = Convert.ToSingle(width) / Convert.ToSingle(height);
+            float slope = Convert.ToSingle(width) / Convert.ToSingle(height);
             if (Platform.PlatFormType == PlatFormType.Android || Platform.PlatFormType == PlatFormType.iOS || Platform.PlatFormType == PlatFormType.UWP)
             {
                 if (slope >= 1.5)
                 {
-                    Session.Resolution = "925*520";
-                    LargeContextMenu = true;
+                    Session.Resolution = "1000*620";  //"925*520";
+                                                      //LargeContextMenu = true;
                 }
                 else
                 {
                     Session.Resolution = "1024*768";
                 }
             }
+
             //else if (Platform.PlatFormType == PlatFormType.iOS)
             //{
             //    screenscalex1 = Convert.ToSingle(Session.ResolutionX) / 1120f;
@@ -451,30 +503,32 @@ namespace GameManager
             screenscalex2 = Convert.ToSingle(width) / Session.ResolutionX;  // 1120f;
             screenscaley2 = Convert.ToSingle(height) / Session.ResolutionY;  // 630f;
 
-			//screenScale = screenscalex >= screenscaley ? screenscaley : screenscalex;
+            //screenScale = screenscalex >= screenscaley ? screenscaley : screenscalex;
 
-			InputManager.Scale1 = new Vector2(screenscalex1, screenscaley1);
-			InputManager.Scale2 = new Vector2(screenscalex2, screenscaley2);
-			//CoreGame.Current.SpriteScale = Matrix.CreateScale(screenScale, screenScale, 1);
-			//InputManager.Scale = new Vector2(screenScale, screenScale);
+            InputManager.Scale1 = new Vector2(screenscalex1, screenscaley1);
 
-			//if (Platform.PlatFormType == PlatFormType.iOS)
-			//{
-                //if (slope < 1.5)
-                //{
+
+            //CoreGame.Current.SpriteScale = Matrix.CreateScale(screenScale, screenScale, 1);
+            //InputManager.Scale = new Vector2(screenScale, screenScale);
+
+            //if (Platform.PlatFormType == PlatFormType.iOS)
+            //{
+            //if (slope < 1.5)
+            //{
             //        InputManager.Scale1 = new Vector2(Session.ResolutionX / 1280f, Session.ResolutionY / 720f);
             //        InputManager.Scale2 = Vector2.One;
-                //}
-			//}
+            //}
+            //}
 
             InputManager.ScaleDraw = new Vector2(1, 1);
             if (setScale)
             {
+                InputManager.Scale2 = new Vector2(screenscalex2, screenscaley2);
                 Session.MainGame.disScale = true;
             }
             else
             {
-                Session.MainGame.disScale = true;
+                Session.MainGame.disScale = false;
             }
 
             Session.MainGame.SpriteScale1 = Matrix.CreateScale(screenscalex1, screenscaley1, 1);
@@ -482,9 +536,9 @@ namespace GameManager
 
             Platform.SetGraphicsWidthHeight(width, height);
 
-            //Platform.Current.ProcessViewChanged();
+            Platform.Current.ProcessViewChanged();
 
-            Platform.GraphicsApplyChanges();            
+            Platform.GraphicsApplyChanges();
 
             InputManager.SWidth = Session.ResolutionX;
             InputManager.SHeight = Session.ResolutionY;
@@ -506,9 +560,10 @@ namespace GameManager
 
         public static void StartScenario(Scenario scenario, bool save)
         {
-            var players = scenario.Players.Split(',').RemoveNullOrEmpty().Select(id => int.Parse(id)).NullToEmptyList();        
+            var players = scenario.Players.Split(',').RemoveNullOrEmpty().Select(id => int.Parse(id)).NullToEmptyList();
 
-            Session.MainGame.loadingScreen = new LoadingScreen();
+            Session.MainGame.loadingScreen = new LoadingScreen(save  ? "" : "Start", scenario.Name);
+
             Session.MainGame.loadingScreen.LoadScreenEvent += (sender0, e0) =>
             {
                 var mainGameScreen = new MainGameScreen();
@@ -529,6 +584,8 @@ namespace GameManager
                 mainGameScreen.Initialize();
                 Session.MainGame.mainGameScreen = mainGameScreen;
 
+                mainGameScreen.cloudLayer.Start();
+
                 Session.Current.Scenario.AfterInit();
             };
         }
@@ -536,52 +593,24 @@ namespace GameManager
         public static void PlayMusic(string category)
         {
             string[] songs = null;
+            songs = Platform.Current.GetMODFiles(@"Content\Music\" + category, true).NullToEmptyArray();
 
-            if (category == "Start")
-            {
-                songs = new string[] { @"Content\Music\Start\Start" };
-            }
-            else if (category == "Attack")
-            {
-                songs = new string[] { @"Content\Music\Attack\Attack" };
-            }
-            else if (category == "Defend")
-            {
-                songs = new string[] { @"Content\Music\Defend\Defend" };
-            }
-            else if (category == "Battle")
-            {
-                songs = new string[] { @"Content\Music\Battle\Battle" };
-            }
-            else if (category == "Spring")
-            {
-                songs = new string[] { @"Content\Music\Spring\Spring" };
-            }
-            else if (category == "Summer")
-            {
-                songs = new string[] { @"Content\Music\Summer\Summer" };
-            }
-            else if (category == "Autumn")
-            {
-                songs = new string[] { @"Content\Music\Autumn\Autumn" };
-            }
-            else if (category == "Winter")
-            {
-                songs = new string[] { @"Content\Music\Winter\Winter" };
-            }
+            Platform.Current.PlaySong(songs);
+            //if (songs.Length > 0)
+            //{
+            //    Random rd = new Random();
+            //    int index = rd.Next(0, songs.Length);
+            //    string song = songs[index];
+            //    Platform.Current.PlaySong(song);
+            //}
 
-            Random rd = new Random();
-            int index = rd.Next(0, songs.Length);
-            string song = songs[index];
-
-            Platform.Current.PlaySong(song);
         }
 
         public static void StopSong()
         {
             Platform.Current.StopSong();
         }
-        
+
     }
 }
 

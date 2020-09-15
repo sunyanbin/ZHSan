@@ -25,7 +25,7 @@ namespace GameObjects
 
         public ConditionTable Conditions = new ConditionTable();
 
-        [DataMember]
+        //[DataMember]
         public List<PersonDialog> Dialogs = new List<PersonDialog>();
 
         [DataMember]
@@ -64,6 +64,9 @@ namespace GameObjects
 
         [DataMember]
         public String Sound = "";
+
+        [DataMember]
+        public string TryToShowString { get; set; }
 
         public event ApplyTroopEvent OnApplyTroopEvent;
 
@@ -246,14 +249,7 @@ namespace GameObjects
 
         public bool CheckCondition(Troop troop)
         {
-            foreach (Condition condition in this.Conditions.Conditions.Values)
-            {
-                if (!condition.CheckCondition(troop))
-                {
-                    return false;
-                }
-            }
-            return true;
+            return Condition.CheckConditionList(this.Conditions.Conditions.Values, troop);
         }
 
         public bool CheckTroop(Troop troop)
